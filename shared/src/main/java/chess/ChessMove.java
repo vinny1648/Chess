@@ -15,37 +15,37 @@ public class ChessMove {
             return false;
         }
         ChessMove chessMove = (ChessMove) o;
-        return Objects.equals(spos, chessMove.spos) && Objects.equals(epos, chessMove.epos) && promoPiece == chessMove.promoPiece;
+        return Objects.equals(startpos, chessMove.startpos) && Objects.equals(endpos, chessMove.endpos) && promoPiece == chessMove.promoPiece;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(spos, epos, promoPiece);
+        return Objects.hash(startpos, endpos, promoPiece);
     }
 
-    private final ChessPosition spos;
-    private final ChessPosition epos;
+    private final ChessPosition startpos;
+    private final ChessPosition endpos;
     private final ChessPiece.PieceType promoPiece;
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
-        spos = startPosition;
-        epos = endPosition;
-        promoPiece = promotionPiece;
+        this.startpos = startPosition;
+        this.endpos = endPosition;
+        this.promoPiece = promotionPiece;
     }
 
     /**
      * @return ChessPosition of starting location
      */
     public ChessPosition getStartPosition() {
-        return spos;
+        return startpos;
     }
 
     /**
      * @return ChessPosition of ending location
      */
     public ChessPosition getEndPosition() {
-        return epos;
+        return endpos;
     }
 
     /**
