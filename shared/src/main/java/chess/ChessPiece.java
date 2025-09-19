@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -25,7 +26,7 @@ public class ChessPiece {
     }
 
     private final ChessGame.TeamColor color;
-    private PieceType piece;
+    private final PieceType piece;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.color = pieceColor;
@@ -65,7 +66,32 @@ public class ChessPiece {
      *
      * @return Collection of valid moves
      */
-    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+    private Collection<ChessMove> moveMultiplier(ChessBoard board, ChessPosition myPosition, int[][]directions) {
         throw new RuntimeException("Not implemented");
+    }
+    private Collection<ChessMove> moveFinder(ChessBoard board, ChessPosition myPosition, int[][]directions) {
+        throw new RuntimeException("Not implemented");
+    }
+    private Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition) {
+        throw new RuntimeException("Not implemented");
+    }
+
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+        //sorts piece types based on the directions they can move in
+        int[][] directions = switch (getPieceType()) {
+            case KING, QUEEN -> new int[][]{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+            case BISHOP -> new int[][]{{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
+            case KNIGHT -> new int[][]{{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
+            case ROOK -> new int[][]{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+            case PAWN -> null;
+        };
+        Collection<ChessMove> moves = new ArrayList<>();
+        //finds moves for continuously moving or non-continuously moving pieces
+        moves = switch (getPieceType()) {
+            case QUEEN, BISHOP, ROOK -> moveMultiplier(board, myPosition, directions);
+            case KING, KNIGHT -> moveFinder(board, myPosition, directions);
+            case PAWN -> pawnMoves(board, myPosition);
+        };
+        return moves;
     }
 }
