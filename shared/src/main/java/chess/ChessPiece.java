@@ -66,14 +66,108 @@ public class ChessPiece {
      *
      * @return Collection of valid moves
      */
+    //checks if the move is on the board
+    private boolean onBoard(int[] move) {
+        return move[0] >= 1 && move[0] <= 8 && move[1] >= 1 && move[1] <= 8;
+    }
+    //checks if the move is on an enemy piece
+    private boolean onEnemyPiece(ChessBoard board, int[] move) {
+        ChessPosition pos = new ChessPosition(move[0], move[1]);
+        if (board.getPiece(pos) == null) {
+            return false;
+        } else return board.getPiece(pos).getTeamColor() != getTeamColor();
+    }
+    //checks if the move is on a team piece
+    private boolean onTeamPiece(ChessBoard board, int[] move) {
+        ChessPosition pos = new ChessPosition(move[0], move[1]);
+        if (board.getPiece(pos) == null) {
+            return false;
+        } else return board.getPiece(pos).getTeamColor() == getTeamColor();
+    }
+    //calculates moves for pieces that move continuously
     private Collection<ChessMove> moveMultiplier(ChessBoard board, ChessPosition myPosition, int[][]directions) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = new ArrayList<>();
+        //for every direction
+        for (int[] direction : directions) {
+            boolean valid = true;
+            int multiplier = 1;
+            //extend direction until piece hit or off board
+            while (valid) {
+                int[] potentialMove = new int[]{(direction[0] * multiplier) + myPosition.getRow(), (direction[1] * multiplier) + myPosition.getColumn()};
+                if (onBoard(potentialMove)) {
+                    if (onEnemyPiece(board, potentialMove)) {
+                        moves.add(new ChessMove(myPosition, new ChessPosition(potentialMove[0], potentialMove[1]), null));
+                        valid = false;
+                    } else if (onTeamPiece(board, potentialMove)) {
+                        valid = false;
+                    } else {
+                        moves.add(new ChessMove(myPosition, new ChessPosition(potentialMove[0], potentialMove[1]), null));
+                        multiplier++;
+                    }
+                } else {
+                    valid = false;
+                }
+            }
+        }
+        return moves;
     }
+    //calculates moves for pieces that don't move continuously
     private Collection<ChessMove> moveFinder(ChessBoard board, ChessPosition myPosition, int[][]directions) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = new ArrayList<>();
+        for (int[] direction : directions) {
+            int[] potentialMove = new int[]{direction[0] + myPosition.getRow(), direction[1] + myPosition.getColumn()};
+            if (onBoard(potentialMove) && !onTeamPiece(board, potentialMove)) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMove[0], potentialMove[1]), null));
+            }
+        }
+        return moves;
     }
+    //calculates moves for pawns (needs work)
     private Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = new ArrayList<>();
+        int[][] potentialMoves = switch (getTeamColor()) {
+            case WHITE -> new int[][]{{1, 1}, {1, -1}, {1, 0}, {2, 0}};
+            case BLACK -> new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {-2, 0}};
+        };
+        for (int i = 0; i < 4; i++) {
+            potentialMoves[i] = new int[]{myPosition.getRow() + potentialMoves[i][0], myPosition.getColumn() + potentialMoves[i][1]};
+        }
+        if (onBoard(potentialMoves[0]) && onEnemyPiece(board, potentialMoves[0])) {
+            if (potentialMoves[0][0] == 1 || potentialMoves[0][0] == 8) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[0][0], potentialMoves[0][1]), PieceType.QUEEN));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[0][0], potentialMoves[0][1]), PieceType.BISHOP));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[0][0], potentialMoves[0][1]), PieceType.KNIGHT));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[0][0], potentialMoves[0][1]), PieceType.ROOK));
+            } else {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[0][0], potentialMoves[0][1]), null));
+            }
+        }
+        if (onBoard(potentialMoves[1]) && onEnemyPiece(board, potentialMoves[1])) {
+            if (potentialMoves[1][0] == 1 || potentialMoves[1][0] == 8) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[1][0], potentialMoves[1][1]), PieceType.QUEEN));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[1][0], potentialMoves[1][1]), PieceType.BISHOP));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[1][0], potentialMoves[1][1]), PieceType.KNIGHT));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[1][0], potentialMoves[1][1]), PieceType.ROOK));
+            } else {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[1][0], potentialMoves[1][1]), null));
+            }
+        }
+        if (onBoard(potentialMoves[2]) && !onEnemyPiece(board, potentialMoves[2]) && !onTeamPiece(board, potentialMoves[2])) {
+            if (potentialMoves[2][0] == 1 || potentialMoves[2][0] == 8) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), PieceType.QUEEN));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), PieceType.BISHOP));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), PieceType.KNIGHT));
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), PieceType.ROOK));
+            } else {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), null));
+            }
+        }
+        if ((getTeamColor() == ChessGame.TeamColor.WHITE && myPosition.getRow() == 2) || (getTeamColor() == ChessGame.TeamColor.BLACK && myPosition.getRow() == 7)) {
+            if (!onEnemyPiece(board, potentialMoves[2]) && !onTeamPiece(board, potentialMoves[2]) && !onEnemyPiece(board, potentialMoves[3]) && !onTeamPiece(board, potentialMoves[3])) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[3][0], potentialMoves[3][1]), null));
+            }
+        }
+        return moves;
     }
 
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
@@ -85,7 +179,7 @@ public class ChessPiece {
             case ROOK -> new int[][]{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
             case PAWN -> null;
         };
-        Collection<ChessMove> moves = new ArrayList<>();
+        Collection<ChessMove> moves;
         //finds moves for continuously moving or non-continuously moving pieces
         moves = switch (getPieceType()) {
             case QUEEN, BISHOP, ROOK -> moveMultiplier(board, myPosition, directions);
