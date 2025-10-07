@@ -174,6 +174,7 @@ public class CastlingTests {
 
 
         //make sure king can't castle towards moved rook, but still can to unmoved rook
+        game.validMoves(new ChessPosition(1, 5));
         assertWhiteCanCastle(game, false, true);
 
         //move king

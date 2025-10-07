@@ -149,13 +149,13 @@ public class ChessGame {
         // if the moveset is for a king, check to see if it can castle
         if (piece.getPieceType() == ChessPiece.PieceType.KING && !isInCheck(piece.getTeamColor())) {
             // check for white king castles
-            if (getTeamTurn() == TeamColor.WHITE && !wKingHasMoved) {
+            if (board.getPiece(startPosition).getTeamColor() == TeamColor.WHITE && !wKingHasMoved) {
                 //check for queenside castle
                 if (!swRookHasMoved) {
                     ChessPosition path1 = new ChessPosition(1, 2);
                     ChessPosition path2 = new ChessPosition(1, 3);
                     ChessPosition path3 = new ChessPosition(1, 4);
-                    if (board.getPiece(path1) == null && board.getPiece(path2) == null && board.getPiece(path3) == null && !posInCheck(path1) && !posInCheck(path2) && !posInCheck(path3)) {
+                    if (board.getPiece(path1) == null && board.getPiece(path2) == null && board.getPiece(path3) == null && !posInCheck(path1, piece.getTeamColor()) && !posInCheck(path2, piece.getTeamColor()) && !posInCheck(path3, piece.getTeamColor())) {
                         ChessMove qsCastle = new ChessMove(startPosition, path2, null);
                         newMoves.add(qsCastle);
                     }
@@ -164,20 +164,20 @@ public class ChessGame {
                 if (!seRookHasMoved) {
                     ChessPosition path4 = new ChessPosition(1, 6);
                     ChessPosition path5 = new ChessPosition(1, 7);
-                    if (board.getPiece(path4) == null && board.getPiece(path5) == null && !posInCheck(path4) && !posInCheck(path5)) {
+                    if (board.getPiece(path4) == null && board.getPiece(path5) == null && !posInCheck(path4, piece.getTeamColor()) && !posInCheck(path5, piece.getTeamColor())) {
                         ChessMove castle = new ChessMove(startPosition, path5, null);
                         newMoves.add(castle);
                     }
                 }
             }
             // check for black king castles
-            if (getTeamTurn() == TeamColor.BLACK && !bKingHasMoved) {
+            if (board.getPiece(startPosition).getTeamColor() == TeamColor.BLACK && !bKingHasMoved) {
                 //check for queen side castle
                 if (!nwRookHasMoved) {
                     ChessPosition path1 = new ChessPosition(8, 2);
                     ChessPosition path2 = new ChessPosition(8, 3);
                     ChessPosition path3 = new ChessPosition(8, 4);
-                    if (board.getPiece(path1) == null && board.getPiece(path2) == null && board.getPiece(path3) == null && !posInCheck(path1) && !posInCheck(path2) && !posInCheck(path3)) {
+                    if (board.getPiece(path1) == null && board.getPiece(path2) == null && board.getPiece(path3) == null && !posInCheck(path1, piece.getTeamColor()) && !posInCheck(path2, piece.getTeamColor()) && !posInCheck(path3, piece.getTeamColor())) {
                         ChessMove qsCastle = new ChessMove(startPosition, path2, null);
                         newMoves.add(qsCastle);
                     }
@@ -186,7 +186,7 @@ public class ChessGame {
                 if (!neRookHasMoved) {
                     ChessPosition path4 = new ChessPosition(8, 6);
                     ChessPosition path5 = new ChessPosition(8, 7);
-                    if (board.getPiece(path4) == null && board.getPiece(path5) == null && !posInCheck(path4) && !posInCheck(path5)) {
+                    if (board.getPiece(path4) == null && board.getPiece(path5) == null && !posInCheck(path4, piece.getTeamColor()) && !posInCheck(path5, piece.getTeamColor())) {
                         ChessMove castle = new ChessMove(startPosition, path5, null);
                         newMoves.add(castle);
                     }
@@ -278,12 +278,12 @@ public class ChessGame {
         }
     }
 
-    public boolean posInCheck(ChessPosition position) {
+    public boolean posInCheck(ChessPosition position, TeamColor teamColor) {
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition pos = new ChessPosition(i, j);
                 ChessPiece piece = board.getPiece(pos);
-                if (piece != null && piece.getTeamColor() != getTeamTurn()) {
+                if (piece != null && piece.getTeamColor() != teamColor) {
                     for (ChessMove move: piece.pieceMoves(board, pos)) {
                         if (move.getEndPosition().getRow() == position.getRow() && move.getEndPosition().getColumn() == position.getColumn()) {
                             return true;
@@ -333,7 +333,7 @@ public class ChessGame {
         };
         Collection<ChessMove> moves = validMoves(king);
         for (ChessMove move: moves) {
-            if (!posInCheck(move.getEndPosition())) {
+            if (!posInCheck(move.getEndPosition(), teamColor)) {
                 return true;
             }
         }
