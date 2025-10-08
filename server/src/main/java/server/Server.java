@@ -10,7 +10,6 @@ public class Server {
         server = Javalin.create(config -> config.staticFiles.add("web"));
 
         server.delete("db", ctx -> ctx.result("{}"));
-        server.post("user", ctx -> ctx.result())
 
         // Register your endpoints and exception handlers here.
 
