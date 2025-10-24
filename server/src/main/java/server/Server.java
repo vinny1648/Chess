@@ -37,13 +37,13 @@ public class Server {
         var request = serializer.fromJson(ctx.body(), User.class);
         try {
             RegistrationResult result = userService.register(request);
-            ctx.status(201);
+            ctx.status(200);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
         }
         catch (AlreadyTakenException error) {
             Map<String, String> result = Map.of("message", "Error: " + error.getMessage());
-            ctx.status(400);
+            ctx.status(403);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
         }
