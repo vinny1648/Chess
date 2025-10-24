@@ -3,6 +3,7 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccess;
+import dataaccess.MemoryDataAccess;
 import datamodel.RegistrationResult;
 import datamodel.User;
 import io.javalin.*;
@@ -20,6 +21,8 @@ public class Server {
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
+        DataAccess dataAccess = new MemoryDataAccess();
+        userService = new UserService(dataAccess);
 
         server.delete("db", ctx -> ctx.result("{}"));
         //ctx -> register(ctx) can replace this::register
