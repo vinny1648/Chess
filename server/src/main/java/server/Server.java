@@ -1,12 +1,16 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccess;
+import datamodel.RegistrationResult;
+import datamodel.User;
 import io.javalin.*;
 import io.javalin.http.Context;
 import service.UserService;
 
 import java.util.Map;
+
 
 public class Server {
 
@@ -27,13 +31,19 @@ public class Server {
     //handler
     private void register(Context ctx) {
         var serializer = new Gson();
-        var req = serializer.fromJson(ctx.body(), RegersterRequest.class);
-        req.put("authToken", "cow");
-
-        userService.register(req);
-
-        var res = serializer.toJson(req);
-        ctx.result(res);
+        var request = serializer.fromJson(ctx.body(), User.class);
+        try {
+            RegistrationResult result = userService.register(request);
+            ctx.status(201);
+            var resultSerialized = serializer.toJson(result);
+            ctx.result(resultSerialized);
+        }
+        catch (AlreadyTakenException error) {
+            Map<String, String> result = Map.of("message", "Error: " + error.getMessage());
+            ctx.status(400);
+            var resultSerialized = serializer.toJson(result);
+            ctx.result(resultSerialized);
+        }
     }
 
     public int run(int desiredPort) {
