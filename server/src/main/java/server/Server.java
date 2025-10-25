@@ -1,14 +1,11 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.AlreadyTakenException;
-import dataaccess.DataAccess;
-import dataaccess.MemoryDataAccess;
-import datamodel.RegistrationResult;
-import datamodel.User;
+import dataaccess.*;
+import datamodel.*;
 import io.javalin.*;
 import io.javalin.http.Context;
-import service.UserService;
+import service.*;
 
 import java.util.Map;
 
@@ -25,27 +22,48 @@ public class Server {
         userService = new UserService(dataAccess);
 
         server.delete("db", ctx -> ctx.result("{}"));
-        //ctx -> register(ctx) can replace this::register
         server.post("user", this::register);
-
+        server.post("session", this::login);
         // Register your endpoints and exception handlers here.
 
     }
     //handler
+    private void errorHandler(Context ctx, String error) {
+        Map<String, String> result = Map.of("message", "Error: " + error);
+        var serializer = new Gson();
+        var resultSerialized = serializer.toJson(result);
+        ctx.result(resultSerialized);
+    }
     private void register(Context ctx) {
         var serializer = new Gson();
-        var request = serializer.fromJson(ctx.body(), User.class);
+        var request = serializer.fromJson(ctx.body(), RegisterUser.class);
         try {
-            RegistrationResult result = userService.register(request);
+            RequestResult result = userService.register(request);
             ctx.status(200);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
         }
         catch (AlreadyTakenException error) {
-            Map<String, String> result = Map.of("message", "Error: " + error.getMessage());
             ctx.status(403);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (BadRequestException error) {
+            ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+    }
+    private void login(Context ctx) {
+        var serializer = new Gson();
+        var request = serializer.fromJson(ctx.body(), LoginUser.class);
+        try {
+            RequestResult result = userService.login(request);
+            ctx.status(200);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
+        }
+        catch (IncorrectPasswordException error) {
+            ctx.status(401);
+            errorHandler(ctx, error.getMessage());
         }
     }
 

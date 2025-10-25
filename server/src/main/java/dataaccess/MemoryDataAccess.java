@@ -1,25 +1,24 @@
 package dataaccess;
 
-import datamodel.User;
+import datamodel.RegisterUser;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
 public class MemoryDataAccess implements DataAccess{
-    private HashMap<String, User> users = new HashMap<>();
-    private ArrayList<UUID> loginTokens = new ArrayList<>();
+    private HashMap<String, RegisterUser> users = new HashMap<>();
+    private HashMap<String, UUID> loginTokens = new HashMap<>();
 
     @Override
-    public void saveUser(User user) {
+    public void saveUser(RegisterUser user) {
         users.put(user.username(), user);
     }
     @Override
-    public User getUser(String username) {
+    public RegisterUser getUser(String username) {
         return users.get(username);
     }
     @Override
-    public void saveAuthToken(UUID authToken) {
-        loginTokens.add(authToken);
+    public void saveAuthToken(String username, UUID authToken) {
+        loginTokens.put(username, authToken);
     }
 }

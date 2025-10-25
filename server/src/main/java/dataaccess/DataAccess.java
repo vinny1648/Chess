@@ -1,13 +1,13 @@
 package dataaccess;
 
-import datamodel.User;
+import datamodel.RegisterUser;
 import java.util.UUID;
 
 public interface DataAccess {
 
-    void saveUser(User user);
+    void saveUser(RegisterUser user);
 
-    User getUser(String username);
+    RegisterUser getUser(String username);
 
-    void saveAuthToken(UUID authToken);
+    void saveAuthToken(String username, UUID authToken);
 }
