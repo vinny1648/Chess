@@ -21,9 +21,9 @@ public class UserService {
             throw new AlreadyTakenException(user.username() + " is already taken.");
         }
         dataAccess.saveUser(user);
-        UUID authToken = UUID.randomUUID();
-        dataAccess.saveAuthToken(user.username(), authToken);
-        return new RequestResult(user.username(), authToken.toString());
+        String authToken = UUID.randomUUID().toString();
+        dataAccess.saveAuthToken(authToken, user.username());
+        return new RequestResult(user.username(), authToken);
     }
     public RequestResult login(LoginUser user) {
         if (user.username() == null || user.password() == null){
@@ -36,8 +36,17 @@ public class UserService {
         if (!Objects.equals(existingUser.password(), user.password())) {
             throw new IncorrectPasswordException("Username or Password is incorrect");
         }
-        UUID authToken = UUID.randomUUID();
-        dataAccess.saveAuthToken(user.username(), authToken);
-        return new RequestResult(user.username(), authToken.toString());
+        String authToken = UUID.randomUUID().toString();
+        dataAccess.saveAuthToken(authToken, user.username());
+        return new RequestResult(user.username(), authToken);
+    }
+    public void logout(LogoutUser user) {
+        if (user.authToken() == null) {
+            throw new UnauthorizedException("No auth token");
+        }
+        if (dataAccess.checkAuthToken(user.authToken()) == null) {
+            throw new UnauthorizedException("Session not valid");
+        }
+        dataAccess.deleteAuthToken(user.authToken());
     }
 }

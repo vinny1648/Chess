@@ -3,11 +3,11 @@ package dataaccess;
 import datamodel.RegisterUser;
 
 import java.util.HashMap;
-import java.util.UUID;
+
 
 public class MemoryDataAccess implements DataAccess{
     private HashMap<String, RegisterUser> users = new HashMap<>();
-    private HashMap<String, UUID> loginTokens = new HashMap<>();
+    private HashMap<String, String> loginTokens = new HashMap<>();
 
     @Override
     public void saveUser(RegisterUser user) {
@@ -18,7 +18,15 @@ public class MemoryDataAccess implements DataAccess{
         return users.get(username);
     }
     @Override
-    public void saveAuthToken(String username, UUID authToken) {
-        loginTokens.put(username, authToken);
+    public void saveAuthToken(String authToken, String username) {
+        loginTokens.put(authToken, username);
+    }
+    @Override
+    public String checkAuthToken(String authToken) {
+        return loginTokens.get(authToken);
+    }
+    @Override
+    public void deleteAuthToken(String authToken) {
+        loginTokens.remove(authToken);
     }
 }

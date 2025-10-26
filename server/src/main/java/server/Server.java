@@ -25,6 +25,7 @@ public class Server {
         server.delete("db", ctx -> ctx.result("{}"));
         server.post("user", this::register);
         server.post("session", this::login);
+        server.delete("session", this::logout);
         // Register your endpoints and exception handlers here.
 
     }
@@ -68,6 +69,19 @@ public class Server {
         }
         catch (BadRequestException error) {
             ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+    }
+    private void logout(Context ctx) {
+        var authToken = ctx.header("Authorization");
+        var request = new LogoutUser(authToken);
+        try {
+            userService.logout(request);
+            ctx.status(200);
+            ctx.result("{}");
+        }
+        catch (UnauthorizedException error) {
+            ctx.status(401);
             errorHandler(ctx, error.getMessage());
         }
     }

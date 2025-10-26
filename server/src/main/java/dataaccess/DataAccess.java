@@ -1,7 +1,6 @@
 package dataaccess;
 
 import datamodel.RegisterUser;
-import java.util.UUID;
 
 public interface DataAccess {
 
@@ -9,5 +8,9 @@ public interface DataAccess {
 
     RegisterUser getUser(String username);
 
-    void saveAuthToken(String username, UUID authToken);
+    void saveAuthToken(String authToken, String username);
+
+    String checkAuthToken(String authToken);
+
+    void deleteAuthToken(String authToken);
 }
