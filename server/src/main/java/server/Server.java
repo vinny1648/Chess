@@ -18,8 +18,9 @@ public class Server {
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
-        DataAccess dataAccess = new MemoryDataAccess();
-        userService = new UserService(dataAccess);
+        this.dataAccess = new MemoryDataAccess();
+        this.userService = new UserService(this.dataAccess);
+
 
         server.delete("db", ctx -> ctx.result("{}"));
         server.post("user", this::register);
@@ -63,6 +64,10 @@ public class Server {
         }
         catch (IncorrectPasswordException error) {
             ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (BadRequestException error) {
+            ctx.status(400);
             errorHandler(ctx, error.getMessage());
         }
     }

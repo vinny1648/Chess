@@ -26,11 +26,15 @@ public class UserService {
         return new RequestResult(user.username(), authToken.toString());
     }
     public RequestResult login(LoginUser user) {
-        if (user.username() == null || user.password() == null) {
-            throw new BadRequestException("User not registered");
+        if (user.username() == null || user.password() == null){
+            throw new BadRequestException("Username and Password must contain characters");
         }
-        if (!Objects.equals(dataAccess.getUser(user.username()).password(), user.password())) {
-            throw new IncorrectPasswordException("Incorrect Password");
+        var existingUser = dataAccess.getUser(user.username());
+        if (existingUser == null) {
+            throw new IncorrectPasswordException("Username or Password is incorrect");
+        }
+        if (!Objects.equals(existingUser.password(), user.password())) {
+            throw new IncorrectPasswordException("Username or Password is incorrect");
         }
         UUID authToken = UUID.randomUUID();
         dataAccess.saveAuthToken(user.username(), authToken);
