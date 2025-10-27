@@ -15,9 +15,9 @@ import java.util.Map;
 public class Server {
 
     private final Javalin server;
-    private UserService userService;
-    private DataAccess dataAccess;
-    private GameService gameService;
+    private final UserService userService;
+    private final DataAccess dataAccess;
+    private final GameService gameService;
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -32,6 +32,7 @@ public class Server {
         server.delete("session", this::logout);
         server.post("game", this::createGame);
         server.get("game", this::listGames);
+        server.put("game", this::joinGame);
         // Register your endpoints and exception handlers here.
 
     }
@@ -129,6 +130,30 @@ public class Server {
         }
         catch (BadRequestException error) {
             ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+    }
+    private void joinGame(Context ctx) {
+        var authToken = ctx.header("Authorization");
+        var serializer = new Gson();
+        var request = serializer.fromJson(ctx.body(), JoinRequest.class);
+        try {
+            userService.checkAuth(authToken);
+            String username = dataAccess.checkAuthToken(authToken);
+            gameService.joinGame(request, username);
+            ctx.status(200);
+            ctx.result("{}");
+        }
+        catch (BadRequestException error) {
+            ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (UnauthorizedException error) {
+            ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (AlreadyTakenException error) {
+            ctx.status(403);
             errorHandler(ctx, error.getMessage());
         }
     }

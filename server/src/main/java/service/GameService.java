@@ -1,17 +1,19 @@
 package service;
 
 import chess.ChessGame;
+import dataaccess.AlreadyTakenException;
 import dataaccess.BadRequestException;
 import dataaccess.DataAccess;
-import datamodel.GameView;
+import datamodel.*;
 import model.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 public class GameService {
 
-    private DataAccess dataAccess;
+    private final DataAccess dataAccess;
 
     public GameService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
@@ -37,15 +39,33 @@ public class GameService {
         for (GameData game: dataAccess.getGameList()) {
             String whiteUsername = game.whiteUsername();
             String blackUsername = game.blackUsername();
-            if (whiteUsername == null) {
-                whiteUsername = "";
-            }
-            if (blackUsername == null) {
-                blackUsername = "";
-            }
             GameView gameView = new GameView(game.gameID(), whiteUsername, blackUsername, game.gameName());
             games.add(gameView);
         }
         return games;
+    }
+    public void joinGame(JoinRequest joinRequest, String username) {
+        GameData game = dataAccess.getGame(joinRequest.gameID());
+        GameData adjustedGame;
+        if (game == null) {
+            throw new BadRequestException("No game with requested ID");
+        }
+        if (Objects.equals(joinRequest.playerColor(), "WHITE")) {
+            if (game.whiteUsername() != null) {
+                throw new AlreadyTakenException("Color already taken");
+            }
+            adjustedGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+        }
+        else if (Objects.equals(joinRequest.playerColor(), "BLACK")) {
+            if (game.blackUsername() != null) {
+                throw new AlreadyTakenException("Color already taken");
+            }
+            adjustedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+        }
+        else {
+            throw new BadRequestException("No exsisting team color");
+        }
+        dataAccess.removeGame(game.gameID());
+        dataAccess.createGame(adjustedGame);
     }
 }

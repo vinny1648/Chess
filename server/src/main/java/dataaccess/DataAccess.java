@@ -23,4 +23,6 @@ public interface DataAccess {
     GameData getGame(int gameID);
 
     Collection<GameData> getGameList();
+
+    void removeGame(int gameID);
 }

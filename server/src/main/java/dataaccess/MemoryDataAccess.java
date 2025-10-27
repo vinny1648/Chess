@@ -55,4 +55,7 @@ public class MemoryDataAccess implements DataAccess{
         Collection<GameData> gameList = new ArrayList<>(games.values());
         return gameList;
     }
+    public void removeGame(int gameID) {
+        games.remove(gameID);
+    }
 }
