@@ -3,10 +3,12 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.*;
 import datamodel.*;
+import model.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import service.*;
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -15,17 +17,21 @@ public class Server {
     private final Javalin server;
     private UserService userService;
     private DataAccess dataAccess;
+    private GameService gameService;
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
         this.dataAccess = new MemoryDataAccess();
         this.userService = new UserService(this.dataAccess);
+        this.gameService = new GameService(this.dataAccess);
 
 
-        server.delete("db", ctx -> ctx.result("{}"));
+        server.delete("db", this::delete);
         server.post("user", this::register);
         server.post("session", this::login);
         server.delete("session", this::logout);
+        server.post("game", this::createGame);
+        server.get("game", this::listGames);
         // Register your endpoints and exception handlers here.
 
     }
@@ -36,9 +42,12 @@ public class Server {
         var resultSerialized = serializer.toJson(result);
         ctx.result(resultSerialized);
     }
+    private void delete(Context ctx) {
+        dataAccess.clear();
+    }
     private void register(Context ctx) {
         var serializer = new Gson();
-        var request = serializer.fromJson(ctx.body(), RegisterUser.class);
+        var request = serializer.fromJson(ctx.body(), model.UserData.class);
         try {
             RequestResult result = userService.register(request);
             ctx.status(200);
@@ -74,14 +83,52 @@ public class Server {
     }
     private void logout(Context ctx) {
         var authToken = ctx.header("Authorization");
-        var request = new LogoutUser(authToken);
         try {
-            userService.logout(request);
+            userService.logout(authToken);
             ctx.status(200);
             ctx.result("{}");
         }
         catch (UnauthorizedException error) {
             ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+    }
+    private void createGame(Context ctx) {
+        var authToken = ctx.header("Authorization");
+        var serializer = new Gson();
+        var request = serializer.fromJson(ctx.body(), model.GameData.class);
+        try {
+            userService.checkAuth(authToken);
+            int gameID = gameService.createGame(request);
+            ctx.status(200);
+            var resultSerialized = serializer.toJson(Map.of("gameID", gameID));
+            ctx.result(resultSerialized);
+        }
+        catch (UnauthorizedException error) {
+            ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (BadRequestException error) {
+            ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+    }
+    private void listGames(Context ctx) {
+        var authToken = ctx.header("Authorization");
+        var serializer = new Gson();
+        try {
+            userService.checkAuth(authToken);
+            Collection<GameView> gameList = gameService.listGames();
+            ctx.status(200);
+            var resultSerialized = serializer.toJson(Map.of("games", gameList));
+            ctx.result(resultSerialized);
+        }
+        catch (UnauthorizedException error) {
+            ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (BadRequestException error) {
+            ctx.status(400);
             errorHandler(ctx, error.getMessage());
         }
     }

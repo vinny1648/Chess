@@ -13,7 +13,17 @@ public class UserService {
     public UserService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
     }
-    public RequestResult register(RegisterUser user) {
+
+    public void checkAuth(String authToken) {
+        if (authToken == null) {
+            throw new UnauthorizedException("No auth token");
+        }
+        if (dataAccess.checkAuthToken(authToken) == null) {
+            throw new UnauthorizedException("Session not valid");
+        }
+    }
+
+    public RequestResult register(model.UserData user) {
         if (user.username() == null || user.password() == null || user.email() == null) {
             throw new BadRequestException("Username, Password, and Email must contain characters");
         }
@@ -40,13 +50,8 @@ public class UserService {
         dataAccess.saveAuthToken(authToken, user.username());
         return new RequestResult(user.username(), authToken);
     }
-    public void logout(LogoutUser user) {
-        if (user.authToken() == null) {
-            throw new UnauthorizedException("No auth token");
-        }
-        if (dataAccess.checkAuthToken(user.authToken()) == null) {
-            throw new UnauthorizedException("Session not valid");
-        }
-        dataAccess.deleteAuthToken(user.authToken());
+    public void logout(String authToken) {
+        checkAuth(authToken);
+        dataAccess.deleteAuthToken(authToken);
     }
 }
