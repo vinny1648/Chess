@@ -1,6 +1,7 @@
 package service;
 import dataaccess.*;
 import datamodel.*;
+import model.*;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -32,7 +33,8 @@ public class UserService {
         }
         dataAccess.saveUser(user);
         String authToken = UUID.randomUUID().toString();
-        dataAccess.saveAuthToken(authToken, user.username());
+        AuthData authData = new AuthData(authToken, user.username());
+        dataAccess.saveAuthToken(authData);
         return new RequestResult(user.username(), authToken);
     }
     public RequestResult login(LoginUser user) {
@@ -47,7 +49,8 @@ public class UserService {
             throw new IncorrectPasswordException("Username or Password is incorrect");
         }
         String authToken = UUID.randomUUID().toString();
-        dataAccess.saveAuthToken(authToken, user.username());
+        AuthData authData = new AuthData(authToken, user.username());
+        dataAccess.saveAuthToken(authData);
         return new RequestResult(user.username(), authToken);
     }
     public void logout(String authToken) {

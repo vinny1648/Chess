@@ -25,7 +25,7 @@ public class GameService {
         }
         return id;
     }
-    public int createGame(model.GameData game) {
+    public int createGame(GameData game) {
         if (game.gameName() == null) {
             throw new BadRequestException("Game name must include characters");
         }

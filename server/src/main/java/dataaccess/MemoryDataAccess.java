@@ -1,6 +1,6 @@
 package dataaccess;
 
-import model.GameData;
+import model.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,9 +9,9 @@ import java.util.HashMap;
 
 
 public class MemoryDataAccess implements DataAccess{
-    private HashMap<String, model.UserData> users = new HashMap<>();
+    private HashMap<String, UserData> users = new HashMap<>();
     private HashMap<String, String> loginTokens = new HashMap<>();
-    private HashMap<Integer, model.GameData> games = new HashMap<>();
+    private HashMap<Integer, GameData> games = new HashMap<>();
 
     @Override
     public void clear() {
@@ -28,8 +28,8 @@ public class MemoryDataAccess implements DataAccess{
         return users.get(username);
     }
     @Override
-    public void saveAuthToken(String authToken, String username) {
-        loginTokens.put(authToken, username);
+    public void saveAuthToken(AuthData authData) {
+        loginTokens.put(authData.authToken(), authData.username());
     }
     @Override
     public String checkAuthToken(String authToken) {

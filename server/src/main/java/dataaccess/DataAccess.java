@@ -1,6 +1,6 @@
 package dataaccess;
 
-import model.GameData;
+import model.*;
 
 import java.util.Collection;
 
@@ -8,17 +8,17 @@ public interface DataAccess {
 
     void clear();
 
-    void saveUser(model.UserData user);
+    void saveUser(UserData user);
 
-    model.UserData getUser(String username);
+    UserData getUser(String username);
 
-    void saveAuthToken(String authToken, String username);
+    void saveAuthToken(AuthData authToken);
 
     String checkAuthToken(String authToken);
 
     void deleteAuthToken(String authToken);
 
-    void createGame(model.GameData game);
+    void createGame(GameData game);
 
     GameData getGame(int gameID);
 
