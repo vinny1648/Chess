@@ -3,7 +3,6 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.*;
 import datamodel.*;
-import model.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import service.*;
@@ -21,7 +20,7 @@ public class Server {
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
-        dataAccess = new MySQLDataAccess();
+        dataAccess = new MySqlDataAccess();
         userService = new UserService(this.dataAccess);
         gameService = new GameService(this.dataAccess);
 
@@ -43,7 +42,7 @@ public class Server {
         var resultSerialized = serializer.toJson(result);
         ctx.result(resultSerialized);
     }
-    private void delete(Context ctx) {
+    private void delete(Context ctx) throws DataAccessException {
         dataAccess.clear();
     }
     private void register(Context ctx) {
@@ -61,6 +60,9 @@ public class Server {
         }
         catch (BadRequestException error) {
             ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        } catch (DataAccessException error) {
+            ctx.status(500);
             errorHandler(ctx, error.getMessage());
         }
     }
@@ -81,6 +83,10 @@ public class Server {
             ctx.status(400);
             errorHandler(ctx, error.getMessage());
         }
+        catch (DataAccessException error) {
+            ctx.status(500);
+            errorHandler(ctx, error.getMessage());
+        }
     }
     private void logout(Context ctx) {
         var authToken = ctx.header("Authorization");
@@ -91,6 +97,10 @@ public class Server {
         }
         catch (UnauthorizedException error) {
             ctx.status(401);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (DataAccessException error) {
+            ctx.status(400);
             errorHandler(ctx, error.getMessage());
         }
     }
@@ -113,6 +123,10 @@ public class Server {
             ctx.status(400);
             errorHandler(ctx, error.getMessage());
         }
+        catch (DataAccessException error) {
+            ctx.status(500);
+            errorHandler(ctx, error.getMessage());
+        }
     }
     private void listGames(Context ctx) {
         var authToken = ctx.header("Authorization");
@@ -130,6 +144,10 @@ public class Server {
         }
         catch (BadRequestException error) {
             ctx.status(400);
+            errorHandler(ctx, error.getMessage());
+        }
+        catch (DataAccessException error) {
+            ctx.status(500);
             errorHandler(ctx, error.getMessage());
         }
     }
@@ -154,6 +172,9 @@ public class Server {
         }
         catch (AlreadyTakenException error) {
             ctx.status(403);
+            errorHandler(ctx, error.getMessage());
+        } catch (DataAccessException error) {
+            ctx.status(500);
             errorHandler(ctx, error.getMessage());
         }
     }

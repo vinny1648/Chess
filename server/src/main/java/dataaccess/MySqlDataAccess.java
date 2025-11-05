@@ -2,9 +2,7 @@ package dataaccess;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
-import model.AuthData;
-import model.GameData;
-import model.UserData;
+import model.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,26 +11,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static dataaccess.DatabaseManager.createDatabase;
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
-import static java.sql.Types.NULL;
 import static java.sql.Types.VARCHAR;
 
 
-public class MySQLDataAccess implements DataAccess{
+public class MySqlDataAccess implements DataAccess{
 
-    public void MySqlDataAccess() throws DataAccessException {
+    public MySqlDataAccess() throws DataAccessException {
         createDatabase();
     }
 
     @Override
-    public void clear(){
-
+    public void clear() throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE game")) {
+                preparedStatement.executeUpdate();
+            }
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE authtoken")) {
+                preparedStatement.executeUpdate();
+            }
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE user")) {
+                preparedStatement.executeUpdate();
+            }
+        }
+        catch (Exception e) {
+            throw new DataAccessException("Unable to update database: " + e.getMessage());
+        }
     };
-//    var statement = "INSERT INTO pet (name, type, json) VALUES (?, ?, ?)";
-//    String json = new Gson().toJson(pet);
-//    int id = executeUpdate(statement, pet.name(), pet.type(), json);
-//        return new Pet(id, pet.name(), pet.type());
-//}
+
     @Override
     public void saveUser(UserData user) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
@@ -201,27 +206,4 @@ public class MySQLDataAccess implements DataAccess{
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
     };
-//    private int executeUpdate(String statement, Object... params) throws DataAccessException {
-//        try (Connection conn = DatabaseManager.getConnection()) {
-//            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-//                for (int i = 0; i < params.length; i++) {
-//                    Object param = params[i];
-//                    if (param instanceof String p) ps.setString(i + 1, p);
-//                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
-//                    else if (param instanceof ChessGame p) ps.setString(i + 1, p.toString());
-//                    else if (param == null) ps.setNull(i + 1, NULL);
-//                }
-//                ps.executeUpdate();
-//
-//                ResultSet rs = ps.getGeneratedKeys();
-//                if (rs.next()) {
-//                    return rs.getInt(1);
-//                }
-//
-//                return 0;
-//            }
-//        } catch (Exception e) {
-//            throw new DataAccessException("Unable to update database: " + e.getMessage());
-//        }
-//    }
 }

@@ -19,14 +19,14 @@ public class GameService {
     public GameService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
     }
-    private int getID (){
+    private int getID () throws DataAccessException {
         int id = (int)(Math.random() * 10000) + 1;
         while (dataAccess.getGame(id) != null) {
             id = (int)(Math.random() * 10000) + 1;
         }
         return id;
     }
-    public int createGame(GameData game) {
+    public int createGame(GameData game) throws DataAccessException {
         if (game.gameName() == null) {
             throw new BadRequestException("Game name must include characters");
         }
@@ -45,7 +45,7 @@ public class GameService {
         }
         return games;
     }
-    public void joinGame(JoinRequest joinRequest, String username) {
+    public void joinGame(JoinRequest joinRequest, String username) throws DataAccessException {
         GameData game = dataAccess.getGame(joinRequest.gameID());
         GameData adjustedGame;
         if (game == null) {

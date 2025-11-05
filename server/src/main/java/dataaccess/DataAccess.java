@@ -6,7 +6,7 @@ import java.util.Collection;
 
 public interface DataAccess {
 
-    void clear();
+    void clear() throws DataAccessException;
 
     void saveUser(UserData user) throws DataAccessException;
 

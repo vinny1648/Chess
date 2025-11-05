@@ -40,7 +40,7 @@ public class Tests {
     @Test
     @Order(1)
     @DisplayName("Clear Positive")
-    public void clearPositiveTest() {
+    public void clearPositiveTest() throws DataAccessException {
         userService.register(userOne);
         userService.register(userTwo);
         int game1ID = gameService.createGame(gameOne);
@@ -59,14 +59,14 @@ public class Tests {
     @Test
     @Order(2)
     @DisplayName("Register Positive")
-    public void registerPositiveTest() {
+    public void registerPositiveTest() throws DataAccessException {
         Assertions.assertEquals("Xx_gamer_xX", userService.register(userOne).username());
         Assertions.assertEquals("BigGuy69", userService.register(userTwo).username());
     }
     @Test
     @Order(3)
     @DisplayName("Register Negative")
-    public void registerNegativeTest() {
+    public void registerNegativeTest() throws DataAccessException {
         Assertions.assertEquals("Xx_gamer_xX", userService.register(userOne).username());
         Assertions.assertThrows(AlreadyTakenException.class, () -> {
             userService.register(userOne);
@@ -75,7 +75,7 @@ public class Tests {
     @Test
     @Order(4)
     @DisplayName("Login Positive")
-    public void loginPositiveTest() {
+    public void loginPositiveTest() throws DataAccessException {
 
         String authTOne = userService.register(userOne).authToken();
         userService.logout(authTOne);
@@ -91,7 +91,7 @@ public class Tests {
     @Test
     @Order(5)
     @DisplayName("Login Negative")
-    public void loginNegativeTest() {
+    public void loginNegativeTest() throws DataAccessException {
         String authTOne = userService.register(userOne).authToken();
         userService.logout(authTOne);
         Assertions.assertThrows(IncorrectPasswordException.class, () -> {
@@ -101,7 +101,7 @@ public class Tests {
     @Test
     @Order(6)
     @DisplayName("Logout Positive")
-    public void logoutPositiveTest() {
+    public void logoutPositiveTest() throws DataAccessException {
         String authToken = userService.register(userOne).authToken();
         Assertions.assertDoesNotThrow(() -> {
             userService.logout(authToken);
@@ -110,7 +110,7 @@ public class Tests {
     @Test
     @Order(7)
     @DisplayName("Logout Negative")
-    public void logoutNegativeTest() {
+    public void logoutNegativeTest() throws DataAccessException {
 
         userService.register(userOne);
         String falseAuthToken = userService.register(userTwo).authToken();
@@ -122,7 +122,7 @@ public class Tests {
     @Test
     @Order(8)
     @DisplayName("List Games Positive")
-    public void listGamesPositiveTest() {
+    public void listGamesPositiveTest() throws DataAccessException {
         gameService.createGame(gameOne);
         gameService.createGame(gameTwo);
         Collection<GameView> games = gameService.listGames();
@@ -131,7 +131,7 @@ public class Tests {
     @Test
     @Order(9)
     @DisplayName("List Games Negative")
-    public void listGamesNegativeTest() {
+    public void listGamesNegativeTest() throws DataAccessException {
         Collection<GameView> games = gameService.listGames();
         Assertions.assertTrue(games.isEmpty());
     }
@@ -155,7 +155,7 @@ public class Tests {
     @Test
     @Order(12)
     @DisplayName("Join Game Positive")
-    public void joinGamePositiveTest() {
+    public void joinGamePositiveTest() throws DataAccessException {
         int id = gameService.createGame(gameOne);
         JoinRequest join = new JoinRequest("BLACK", id);
         Assertions.assertDoesNotThrow(() -> {
@@ -165,7 +165,7 @@ public class Tests {
     @Test
     @Order(13)
     @DisplayName("Join Game Negative")
-    public void joinGameNegativeTest() {
+    public void joinGameNegativeTest() throws DataAccessException {
         gameService.createGame(gameOne);
         JoinRequest join = new JoinRequest("BLACK", 4591);
         Assertions.assertThrows(BadRequestException.class, () -> {
