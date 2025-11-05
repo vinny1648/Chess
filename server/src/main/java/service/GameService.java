@@ -4,6 +4,7 @@ import chess.ChessGame;
 import dataaccess.AlreadyTakenException;
 import dataaccess.BadRequestException;
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 import datamodel.*;
 import model.*;
 
@@ -34,7 +35,7 @@ public class GameService {
         dataAccess.createGame(newGame);
         return id;
     }
-    public Collection<GameView> listGames() {
+    public Collection<GameView> listGames() throws DataAccessException {
         ArrayList<GameView> games = new ArrayList<>();
         for (GameData game: dataAccess.getGameList()) {
             String whiteUsername = game.whiteUsername();
