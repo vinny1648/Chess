@@ -21,9 +21,9 @@ public class Server {
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
-        this.dataAccess = new MemoryDataAccess();
-        this.userService = new UserService(this.dataAccess);
-        this.gameService = new GameService(this.dataAccess);
+        dataAccess = new MySQLDataAccess();
+        userService = new UserService(this.dataAccess);
+        gameService = new GameService(this.dataAccess);
 
 
         server.delete("db", this::delete);

@@ -2,6 +2,7 @@ package service;
 import dataaccess.*;
 import datamodel.*;
 import model.*;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -23,6 +24,13 @@ public class UserService {
             throw new UnauthorizedException("Session not valid");
         }
     }
+    void storeUserPassword(UserData user, String clearTextPassword) {
+        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
+
+        // write the hashed password in database along with the user's other information
+        UserData hashedUser = new UserData(user.username(), hashedPassword, user.email());
+        dataAccess.saveUser(hashedUser);
+    }
 
     public RequestResult register(model.UserData user) {
         if (user.username() == null || user.password() == null || user.email() == null) {
@@ -31,11 +39,17 @@ public class UserService {
         if (dataAccess.getUser(user.username()) != null) {
             throw new AlreadyTakenException(user.username() + " is already taken.");
         }
-        dataAccess.saveUser(user);
+        storeUserPassword(user, user.password());
         String authToken = UUID.randomUUID().toString();
         AuthData authData = new AuthData(authToken, user.username());
         dataAccess.saveAuthToken(authData);
         return new RequestResult(user.username(), authToken);
+    }
+    boolean verifyUser(String username, String providedClearTextPassword, UserData existingUser) {
+        // read the previously hashed password from the database
+        var hashedPassword = existingUser.password();
+
+        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
     public RequestResult login(LoginUser user) {
         if (user.username() == null || user.password() == null){
@@ -45,7 +59,7 @@ public class UserService {
         if (existingUser == null) {
             throw new IncorrectPasswordException("Username or Password is incorrect");
         }
-        if (!Objects.equals(existingUser.password(), user.password())) {
+        if (!verifyUser(user.username(), user.password(), existingUser)) {
             throw new IncorrectPasswordException("Username or Password is incorrect");
         }
         String authToken = UUID.randomUUID().toString();
