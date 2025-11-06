@@ -22,7 +22,7 @@ public class MySqlDataAccess implements DataAccess{
 
             var createGameTable = """
             CREATE TABLE IF NOT EXISTS game (
-                gameid INT NOT NULL AUTO_INCREMENT,
+                gameid INT NOT NULL,
                 whiteusername VARCHAR(255),
                 blackusername VARCHAR(255),
                 gamename VARCHAR(255) NOT NULL,
@@ -32,7 +32,7 @@ public class MySqlDataAccess implements DataAccess{
 
             var createUserTable = """
             CREATE TABLE IF NOT EXISTS user (
-                username VARCHAR(255) NOT NULL AUTO_INCREMENT,
+                username VARCHAR(255) NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL,
                 PRIMARY KEY (username)
@@ -40,7 +40,7 @@ public class MySqlDataAccess implements DataAccess{
 
             var createAuthTokenTable = """
             CREATE TABLE IF NOT EXISTS authtoken (
-                username VARCHAR(255) NOT NULL AUTO_INCREMENT,
+                username VARCHAR(255) NOT NULL,
                 token VARCHAR(255) NOT NULL,
                 PRIMARY KEY (token)
             )""";

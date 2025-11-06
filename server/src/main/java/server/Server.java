@@ -47,7 +47,12 @@ public class Server {
         ctx.result(resultSerialized);
     }
     private void delete(Context ctx) throws DataAccessException {
-        dataAccess.clear();
+        try {
+            dataAccess.clear();
+        } catch (DataAccessException error) {
+            ctx.status(500);
+            errorHandler(ctx, error.getMessage());
+        }
     }
     private void register(Context ctx) {
         var serializer = new Gson();
@@ -104,7 +109,7 @@ public class Server {
             errorHandler(ctx, error.getMessage());
         }
         catch (DataAccessException error) {
-            ctx.status(400);
+            ctx.status(500);
             errorHandler(ctx, error.getMessage());
         }
     }
