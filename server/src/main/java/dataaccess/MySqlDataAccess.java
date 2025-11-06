@@ -26,7 +26,7 @@ public class MySqlDataAccess implements DataAccess{
                 whiteusername VARCHAR(255),
                 blackusername VARCHAR(255),
                 gamename VARCHAR(255) NOT NULL,
-                chessgame TEXT NOT NULL,
+                chessgame TEXT,
                 PRIMARY KEY (gameid)
             )""";
 
@@ -167,7 +167,8 @@ public class MySqlDataAccess implements DataAccess{
     @Override
     public void createGame(GameData game) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO game (gameid, whiteusername, blackusername, gamename, chessgame) VALUES (?, ?, ?, ?, ?)")) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO game (gameid, whiteusername, blackusername, gamename, chessgame) VALUES (?, ?, ?, ?, ?)")) {
                 preparedStatement.setInt(1, game.gameID());
                 if (game.whiteUsername() != null) {
                     preparedStatement.setString(2, game.whiteUsername());
@@ -225,7 +226,11 @@ public class MySqlDataAccess implements DataAccess{
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        result.add(new GameData(rs.getInt("gameid"), rs.getString("whiteusername"), rs.getString("blackusername"), rs.getString("gamename"), null));
+                        int gameID = rs.getInt("gameid");
+                        String whiteUsername = rs.getString("whiteusername");
+                        String blackUsername = rs.getString("blackusername");
+                        String gameName = rs.getString("gamename");
+                        result.add(new GameData(gameID, whiteUsername, blackUsername, gameName, null));
                     }
                 }
             }
