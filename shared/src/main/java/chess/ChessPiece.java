@@ -75,14 +75,14 @@ public class ChessPiece {
         ChessPosition pos = new ChessPosition(move[0], move[1]);
         if (board.getPiece(pos) == null) {
             return false;
-        } else return board.getPiece(pos).getTeamColor() != getTeamColor();
+        } else {return board.getPiece(pos).getTeamColor() != getTeamColor();}
     }
     //checks if the move is on a team piece
     private boolean onTeamPiece(ChessBoard board, int[] move) {
         ChessPosition pos = new ChessPosition(move[0], move[1]);
         if (board.getPiece(pos) == null) {
             return false;
-        } else return board.getPiece(pos).getTeamColor() == getTeamColor();
+        } else {return board.getPiece(pos).getTeamColor() == getTeamColor();}
     }
     //calculates moves for pieces that move continuously
     private Collection<ChessMove> moveMultiplier(ChessBoard board, ChessPosition myPosition, int[][]directions) {
@@ -93,7 +93,8 @@ public class ChessPiece {
             int multiplier = 1;
             //extend direction until piece hit or off board
             while (valid) {
-                int[] potentialMove = new int[]{(direction[0] * multiplier) + myPosition.getRow(), (direction[1] * multiplier) + myPosition.getColumn()};
+                int[] potentialMove = new int[]{(direction[0] * multiplier) + myPosition.getRow(),
+                        (direction[1] * multiplier) + myPosition.getColumn()};
                 if (onBoard(potentialMove)) {
                     if (onEnemyPiece(board, potentialMove)) {
                         moves.add(new ChessMove(myPosition, new ChessPosition(potentialMove[0], potentialMove[1]), null));
@@ -130,7 +131,8 @@ public class ChessPiece {
             case BLACK -> new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {-2, 0}};
         };
         for (int i = 0; i < 4; i++) {
-            potentialMoves[i] = new int[]{myPosition.getRow() + potentialMoves[i][0], myPosition.getColumn() + potentialMoves[i][1]};
+            potentialMoves[i] = new int[]{myPosition.getRow() + potentialMoves[i][0],
+                    myPosition.getColumn() + potentialMoves[i][1]};
         }
         if (onBoard(potentialMoves[0]) && onEnemyPiece(board, potentialMoves[0])) {
             if (potentialMoves[0][0] == 1 || potentialMoves[0][0] == 8) {
@@ -162,8 +164,14 @@ public class ChessPiece {
                 moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[2][0], potentialMoves[2][1]), null));
             }
         }
-        if ((getTeamColor() == ChessGame.TeamColor.WHITE && myPosition.getRow() == 2) || (getTeamColor() == ChessGame.TeamColor.BLACK && myPosition.getRow() == 7)) {
-            if (!onEnemyPiece(board, potentialMoves[2]) && !onTeamPiece(board, potentialMoves[2]) && !onEnemyPiece(board, potentialMoves[3]) && !onTeamPiece(board, potentialMoves[3])) {
+        if ((getTeamColor() == ChessGame.TeamColor.WHITE
+                && myPosition.getRow() == 2)
+                || (getTeamColor() == ChessGame.TeamColor.BLACK
+                && myPosition.getRow() == 7)) {
+            if (!onEnemyPiece(board, potentialMoves[2])
+                    && !onTeamPiece(board, potentialMoves[2])
+                    && !onEnemyPiece(board, potentialMoves[3])
+                    && !onTeamPiece(board, potentialMoves[3])) {
                 moves.add(new ChessMove(myPosition, new ChessPosition(potentialMoves[3][0], potentialMoves[3][1]), null));
             }
         }
