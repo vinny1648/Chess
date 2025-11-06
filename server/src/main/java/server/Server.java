@@ -15,12 +15,16 @@ public class Server {
 
     private final Javalin server;
     private final UserService userService;
-    private final DataAccess dataAccess;
+    private DataAccess dataAccess;
     private final GameService gameService;
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
-        dataAccess = new MySqlDataAccess();
+        try {
+            dataAccess = new MySqlDataAccess();
+        } catch (Exception E) {
+            dataAccess = new MemoryDataAccess();
+        }
         userService = new UserService(this.dataAccess);
         gameService = new GameService(this.dataAccess);
 

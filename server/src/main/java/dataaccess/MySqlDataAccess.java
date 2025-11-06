@@ -18,6 +18,47 @@ public class MySqlDataAccess implements DataAccess{
 
     public MySqlDataAccess() throws DataAccessException {
         createDatabase();
+        try (Connection conn = DatabaseManager.getConnection()) {
+
+            var createGameTable = """
+            CREATE TABLE IF NOT EXISTS game (
+                gameid INT NOT NULL AUTO_INCREMENT,
+                whiteusername VARCHAR(255),
+                blackusername VARCHAR(255),
+                gamename VARCHAR(255) NOT NULL,
+                chessgame TEXT NOT NULL,
+                PRIMARY KEY (gameid)
+            )""";
+
+            var createUserTable = """
+            CREATE TABLE IF NOT EXISTS user (
+                username VARCHAR(255) NOT NULL AUTO_INCREMENT,
+                password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                PRIMARY KEY (username)
+            )""";
+
+            var createAuthTokenTable = """
+            CREATE TABLE IF NOT EXISTS authtoken (
+                username VARCHAR(255) NOT NULL AUTO_INCREMENT,
+                token VARCHAR(255) NOT NULL,
+                PRIMARY KEY (token)
+            )""";
+
+
+            try (var createTableStatement = conn.prepareStatement(createGameTable)) {
+                createTableStatement.executeUpdate();
+            }
+            try (var createTableStatement = conn.prepareStatement(createUserTable)) {
+                createTableStatement.executeUpdate();
+            }
+            try (var createTableStatement = conn.prepareStatement(createAuthTokenTable)) {
+                createTableStatement.executeUpdate();
+            }
+        } catch (Exception error) {
+            throw new DataAccessException("Could not add tables: "+ error);
+        }
+
     }
 
     @Override
@@ -36,7 +77,7 @@ public class MySqlDataAccess implements DataAccess{
         catch (Exception e) {
             throw new DataAccessException("Unable to update database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public void saveUser(UserData user) throws DataAccessException {
@@ -52,7 +93,7 @@ public class MySqlDataAccess implements DataAccess{
         catch (Exception e) {
             throw new DataAccessException("Unable to update database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public UserData getUser(String requestedUsername) throws DataAccessException {
@@ -75,7 +116,7 @@ public class MySqlDataAccess implements DataAccess{
         } catch (Exception e) {
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public void saveAuthToken(AuthData authToken) throws DataAccessException {
@@ -90,7 +131,7 @@ public class MySqlDataAccess implements DataAccess{
         catch (Exception e) {
             throw new DataAccessException("Unable to update database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public String checkAuthToken(String authToken) throws DataAccessException {
@@ -109,7 +150,7 @@ public class MySqlDataAccess implements DataAccess{
         } catch (Exception e) {
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public void deleteAuthToken(String authToken) throws DataAccessException {
@@ -121,7 +162,7 @@ public class MySqlDataAccess implements DataAccess{
         } catch (Exception e) {
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public void createGame(GameData game) throws DataAccessException {
@@ -149,7 +190,7 @@ public class MySqlDataAccess implements DataAccess{
         catch (Exception e) {
             throw new DataAccessException("Unable to update database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
@@ -174,7 +215,7 @@ public class MySqlDataAccess implements DataAccess{
         } catch (Exception e) {
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
-    };
+    }
 
     @Override
     public Collection<GameData> getGameList() throws DataAccessException {
@@ -193,7 +234,7 @@ public class MySqlDataAccess implements DataAccess{
     }
         return result;
 
-    };
+    }
 
     @Override
     public void removeGame(int gameID) throws DataAccessException {
@@ -205,5 +246,5 @@ public class MySqlDataAccess implements DataAccess{
         } catch (Exception e) {
             throw new DataAccessException("Unable to query database: " + e.getMessage());
         }
-    };
+    }
 }
