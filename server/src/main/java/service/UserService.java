@@ -30,7 +30,7 @@ public class UserService {
         dataAccess.saveUser(hashedUser);
     }
 
-    public RequestResult register(model.UserData user) throws DataAccessException {
+    public AuthData register(model.UserData user) throws DataAccessException {
         if (user.username() == null || user.password() == null || user.email() == null) {
             throw new BadRequestException("Username, Password, and Email must contain characters");
         }
@@ -41,7 +41,7 @@ public class UserService {
         String authToken = UUID.randomUUID().toString();
         AuthData authData = new AuthData(authToken, user.username());
         dataAccess.saveAuthToken(authData);
-        return new RequestResult(user.username(), authToken);
+        return authData;
     }
     boolean verifyUser(String username, String providedClearTextPassword, UserData existingUser) {
         // read the previously hashed password from the database
@@ -49,7 +49,7 @@ public class UserService {
 
         return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
-    public RequestResult login(LoginUser user) throws DataAccessException {
+    public AuthData login(LoginUser user) throws DataAccessException {
         if (user.username() == null || user.password() == null){
             throw new BadRequestException("Username and Password must contain characters");
         }
@@ -63,7 +63,7 @@ public class UserService {
         String authToken = UUID.randomUUID().toString();
         AuthData authData = new AuthData(authToken, user.username());
         dataAccess.saveAuthToken(authData);
-        return new RequestResult(user.username(), authToken);
+        return authData;
     }
     public void logout(String authToken) throws DataAccessException {
         checkAuth(authToken);

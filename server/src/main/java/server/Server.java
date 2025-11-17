@@ -58,7 +58,7 @@ public class Server {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), model.UserData.class);
         try {
-            RequestResult result = userService.register(request);
+            AuthData result = userService.register(request);
             ctx.status(200);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
@@ -79,7 +79,7 @@ public class Server {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), LoginUser.class);
         try {
-            RequestResult result = userService.login(request);
+            AuthData result = userService.login(request);
             ctx.status(200);
             var resultSerialized = serializer.toJson(result);
             ctx.result(resultSerialized);
