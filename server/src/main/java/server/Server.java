@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
-import model.GameView;
-import model.JoinRequest;
-import model.LoginUser;
-import model.RequestResult;
+import model.*;
 import service.*;
 
 import java.util.Collection;
