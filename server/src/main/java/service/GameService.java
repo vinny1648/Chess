@@ -5,7 +5,6 @@ import dataaccess.AlreadyTakenException;
 import dataaccess.BadRequestException;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import datamodel.*;
 import model.*;
 
 import java.util.ArrayList;

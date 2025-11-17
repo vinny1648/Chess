@@ -2,9 +2,12 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.*;
-import datamodel.*;
 import io.javalin.*;
 import io.javalin.http.Context;
+import model.GameView;
+import model.JoinRequest;
+import model.LoginUser;
+import model.RequestResult;
 import service.*;
 
 import java.util.Collection;

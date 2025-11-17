@@ -1,7 +1,6 @@
 package service;
 
 import dataaccess.*;
-import datamodel.*;
 import model.*;
 import org.junit.jupiter.api.*;
 
