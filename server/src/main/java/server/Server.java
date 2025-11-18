@@ -116,7 +116,7 @@ public class Server {
     private void createGame(Context ctx) {
         var authToken = ctx.header("Authorization");
         var serializer = new Gson();
-        var request = serializer.fromJson(ctx.body(), model.GameData.class);
+        var request = serializer.fromJson(ctx.body(), GameData.class);
         try {
             userService.checkAuth(authToken);
             int gameID = gameService.createGame(request);
