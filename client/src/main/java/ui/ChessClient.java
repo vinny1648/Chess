@@ -6,6 +6,7 @@ import server.ServerFacade;
 import static ui.ChessClient.PlayerState.*;
 import static ui.EscapeSequences.*;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class ChessClient {
@@ -14,7 +15,7 @@ public class ChessClient {
     private PlayerState playerState = UNLOGGED;
     private String username;
 
-    private enum PlayerState {
+    enum PlayerState {
         WHITE,
         BLACK,
         OBSERVER,
@@ -51,9 +52,29 @@ public class ChessClient {
         }
         System.out.println();
     }
-    private void evalInput() {
+    private void evalInput(String line) {
+        String[] tokens = line.toLowerCase().split(" ");
+        String cmd = (tokens.length > 0) ? tokens[0] : "help";
+        String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
         if (playerState == UNLOGGED) {
-            System.out.print("\n" + ERASE_SCREEN);
+            return switch (cmd) {
+                case "register" -> register(params);
+                case "login" -> login(params);
+                case "help" -> help();
+                case "quit" -> "quit";
+                default -> help();
+            };
+        } else if (playerState = MENU) {
+            return switch (cmd) {
+                case "creategame" -> createGame(params);
+                case "joingame" -> joinGame(params);
+                case "observe" -> observe(params);
+                case "listgames" -> listGames();
+                case "logout" -> logout();
+                case "help" -> help();
+                case "quit" -> "quit";
+                default -> help();
+            };
         }
     }
     private String menu() {
