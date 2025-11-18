@@ -109,20 +109,39 @@ public class ChessClient {
     }
     private String joinGame(String... params) throws ResponseException {
         if (params.length >= 2) {
-
+            try {
+                int gameID = Integer.parseInt(params[0]);
+                String color = params[1].toUpperCase();
+                if (color.equals("WHITE")) {
+                    playerState = WHITE;
+                } else if (color.equals("BLACK")) {
+                    playerState = BLACK;
+                }
+                else {
+                    return color + " is not valid. must be BLACK or WHITE";
+                }
+                server.joinGame(new JoinRequest(color, gameID));
+                return "Game Joined";
+            } catch (NumberFormatException e) {
+                throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
+            }
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> [WHITE|BLACK]");
-
     }
     private String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
+            try {
+                int gameID = Integer.parseInt(params[0]);
+                server.joinGame(new JoinRequest(null, gameID));
+                return "Observing Game";
+            } catch (NumberFormatException e) {
+                throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
+            }
 
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID>");
-
     }
-    private String listGames() {
-
+    private String listGames() throws ResponseException {
     }
     private String logout() {
 
