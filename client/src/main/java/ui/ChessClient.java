@@ -79,23 +79,46 @@ public class ChessClient {
         }
     }
     private String register(String... params) throws ResponseException{
-        String usrnm = params[0];
-        String password = params[1];
-        String email = params[2];
-        String name = server.register(new UserData(usrnm, password, email));
-        username = name;
-        return "Logged In";
+        if (params.length >= 3) {
+            String usrnm = params[0];
+            String password = params[1];
+            String email = params[2];
+            username = server.register(new UserData(usrnm, password, email));
+            playerState = MENU;
+            return "Registration Successful";
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password> <email>");
     }
-    private String login(String... params) {
+    private String login(String... params) throws ResponseException {
+        if (params.length >= 2) {
+            String usrnm = params[0];
+            String password = params[1];
+            username = server.login(new LoginUser(usrnm, password));
+            playerState = MENU;
+            return "Log In Successful";
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password>");
+    }
+    private String createGame(String... params) throws ResponseException {
+        if (params.length >= 1) {
+            String gameName = params[0];
+            String gameID = server.createGame(new GameData(0, null, null, gameName, null));
+            return "Game Created";
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gamename>");
+    }
+    private String joinGame(String... params) throws ResponseException {
+        if (params.length >= 2) {
+
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> [WHITE|BLACK]");
 
     }
-    private String createGame(String... params) {
+    private String observe(String... params) throws ResponseException {
+        if (params.length >= 1) {
 
-    }
-    private String joinGame(String... params) {
-
-    }
-    private String observe(String... params) {
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID>");
 
     }
     private String listGames() {
