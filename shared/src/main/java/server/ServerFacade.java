@@ -34,7 +34,7 @@ public class ServerFacade {
         auth = null;
     }
 
-    public String login(UserData user) throws ResponseException {
+    public String login(LoginUser user) throws ResponseException {
         HttpRequest request = buildRequest("POST", "/session", user);
         HttpResponse<String> response = sendRequest(request);
         AuthData data = handleResponse(response, AuthData.class);
