@@ -142,6 +142,13 @@ public class ChessClient {
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID>");
     }
     private String listGames() throws ResponseException {
+        GameList games = server.listGames();
+        String gamesList = "ID  : Name\n";
+        for (int i = 0; i < games.games().size(); i++) {
+            GameData game = games.games().get(i);
+            gamesList = gamesList + game.gameID() + ": " + game.gameName() + "\n";
+        }
+        return gamesList;
     }
     private String logout() {
 
