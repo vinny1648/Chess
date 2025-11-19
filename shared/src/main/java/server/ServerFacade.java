@@ -49,10 +49,10 @@ public class ServerFacade {
         auth = null;
     }
 
-    public String createGame(GameData newGame) throws ResponseException {
+    public GameData createGame(GameData newGame) throws ResponseException {
         HttpRequest request = buildRequest("POST", "/game", newGame);
         HttpResponse<String> response = sendRequest(request);
-        return handleResponse(response, String.class);
+        return handleResponse(response, GameData.class);
     }
 
     public GameList listGames() throws ResponseException{

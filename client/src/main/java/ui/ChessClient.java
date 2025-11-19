@@ -54,8 +54,8 @@ public class ChessClient {
         System.out.println();
     }
     private String evalInput(String line) throws ResponseException {
-        String[] tokens = line.toLowerCase().split(" ");
-        String cmd = (tokens.length > 0) ? tokens[0] : "help";
+        String[] tokens = line.split(" ");
+        String cmd = (tokens.length > 0) ? tokens[0].toLowerCase() : "help";
         String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
         if (playerState == UNLOGGED) {
             return switch (cmd) {
@@ -77,7 +77,6 @@ public class ChessClient {
                 default -> menu();
             };
         }
-        return "in Game";
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
@@ -103,8 +102,8 @@ public class ChessClient {
     private String createGame(String... params) throws ResponseException {
         if (params.length >= 1) {
             String gameName = params[0];
-            String gameID = server.createGame(new GameData(0, null, null, gameName, null));
-            return "Game Created";
+            GameData game = server.createGame(new GameData(0, null, null, gameName, null));
+            return "Game Created with ID " + game.gameID();
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gamename>");
     }
@@ -154,6 +153,7 @@ public class ChessClient {
     private String logout() throws ResponseException {
         server.logout();
         playerState = UNLOGGED;
+        username = null;
         return "Log Out Successful";
     }
 
@@ -171,7 +171,7 @@ public class ChessClient {
                 - joingame <gameID> [WHITE|BLACK]
                 - observe <gameID>
                 - listgames
-                - logout <username> <password>
+                - logout
                 - help
                 - quit
                 """;
