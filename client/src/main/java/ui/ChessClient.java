@@ -150,8 +150,10 @@ public class ChessClient {
         }
         return gamesList;
     }
-    private String logout() {
-
+    private String logout() throws ResponseException {
+        server.logout();
+        playerState = UNLOGGED;
+        return "Log Out Successful";
     }
     private String help() {
 
