@@ -1,5 +1,6 @@
 package ui;
 
+import chess.ChessGame;
 import exception.ResponseException;
 import model.*;
 import server.ServerFacade;
@@ -15,6 +16,7 @@ public class ChessClient {
     private final ServerFacade server;
     private PlayerState playerState = UNLOGGED;
     private String username;
+    private ChessGame currentGame;
 
     enum PlayerState {
         WHITE,
@@ -77,6 +79,17 @@ public class ChessClient {
                 default -> menu();
             };
         }
+        return switch (cmd) {
+            case "concede", "leave" -> concedeGame();
+            default -> move(line);
+        };
+    }
+    private String move(String move) {
+        return "moves not implemented";
+    }
+    private String concedeGame() {
+        playerState = MENU;
+        return "Game Conceded";
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
@@ -120,7 +133,8 @@ public class ChessClient {
                 else {
                     return color + " is not valid. must be BLACK or WHITE";
                 }
-                server.joinGame(new JoinRequest(color, gameID));
+                GameData gameData = server.joinGame(new JoinRequest(color, gameID));
+                currentGame = gameData.game();
                 return "Game Joined";
             } catch (NumberFormatException e) {
                 throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
@@ -133,6 +147,7 @@ public class ChessClient {
             try {
                 int gameID = Integer.parseInt(params[0]);
                 server.joinGame(new JoinRequest(null, gameID));
+                playerState = OBSERVER;
                 return "Observing Game";
             } catch (NumberFormatException e) {
                 throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
