@@ -44,7 +44,7 @@ public class GameService {
         }
         return games;
     }
-    public void joinGame(JoinRequest joinRequest, String username) throws DataAccessException {
+    public GameData joinGame(JoinRequest joinRequest, String username) throws DataAccessException {
         GameData game = dataAccess.getGame(joinRequest.gameID());
         GameData adjustedGame;
         if (game == null) {
@@ -70,5 +70,6 @@ public class GameService {
         }
         dataAccess.removeGame(game.gameID());
         dataAccess.createGame(adjustedGame);
+        return adjustedGame;
     }
 }

@@ -167,9 +167,10 @@ public class Server {
         try {
             userService.checkAuth(authToken);
             String username = dataAccess.checkAuthToken(authToken);
-            gameService.joinGame(request, username);
+            GameData game = gameService.joinGame(request, username);
             ctx.status(200);
-            ctx.result("{}");
+            var resultSerialized = serializer.toJson(game);
+            ctx.result(resultSerialized);
         }
         catch (BadRequestException error) {
             ctx.status(400);
