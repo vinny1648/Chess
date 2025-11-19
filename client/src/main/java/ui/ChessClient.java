@@ -61,9 +61,9 @@ public class ChessClient {
             return switch (cmd) {
                 case "register" -> register(params);
                 case "login" -> login(params);
-                case "help" -> help();
+                case "help" -> menu();
                 case "quit" -> "quit";
-                default -> help();
+                default -> menu();
             };
         } else if (playerState == MENU) {
             return switch (cmd) {
@@ -72,11 +72,12 @@ public class ChessClient {
                 case "observe" -> observe(params);
                 case "listgames" -> listGames();
                 case "logout" -> logout();
-                case "help" -> help();
+                case "help" -> menu();
                 case "quit" -> "quit";
-                default -> help();
+                default -> menu();
             };
         }
+        return "in Game";
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
@@ -155,9 +156,7 @@ public class ChessClient {
         playerState = UNLOGGED;
         return "Log Out Successful";
     }
-    private String help() {
 
-    }
     private String menu() {
         if (playerState == UNLOGGED) {
             return """
