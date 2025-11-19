@@ -83,16 +83,47 @@ public class ChessClient {
             gameViewBlack();
         }
         else {
-            gameView()
+            gameView();
         }
         return switch (cmd) {
             case "concede", "leave" -> concedeGame();
             default -> move(line);
         };
     }
+    private void gameView() {
+        String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
+                "    a   b  c   d   e  f   g  h     " +
+                RESET_TEXT_BOLD_FAINT;
+        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        ChessBoard board = currentGame.getBoard();
+        for (int i = 8; i >= 1; i--) {
+            for (int j = 0; j <= 9; j++) {
+                if (j == 0 || j == 9) {
+                    boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + i + " ";
+                    boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK;
+                } else {
+                    ChessPosition pos = new ChessPosition(i, j);
+                    String piece = buildPiece(board.getPiece(pos));
+                    if (i % 2 == j % 2) {
+                        boardView += SET_BG_COLOR_WHITE;
+                    }
+                    else {
+                        boardView += SET_BG_COLOR_BLACK;
+                    }
+                    boardView += piece;
+                }
+            }
+            boardView += "\n";
+        }
+        boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
+                "    a   b  c   d   e  f   g  h     " +
+                RESET_TEXT_BOLD_FAINT;
+        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        System.out.print(boardView);
+    }
     private void gameViewBlack() {
         String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    a   b  c   d   e  f  g   h     " +
+                "    h   g  f   e   d  c   b  a     " +
                 RESET_TEXT_BOLD_FAINT;
         boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
         ChessBoard board = currentGame.getBoard();
@@ -116,7 +147,7 @@ public class ChessClient {
             boardView += "\n";
         }
         boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    a   b  c   d   e  f  g   h     " +
+                "    h   g  f   e   d  c   b  a     " +
                 RESET_TEXT_BOLD_FAINT;
         boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
         System.out.print(boardView);
