@@ -1,6 +1,6 @@
 package ui;
 
-import chess.ChessGame;
+import chess.*;
 import exception.ResponseException;
 import model.*;
 import server.ServerFacade;
@@ -19,8 +19,8 @@ public class ChessClient {
     private ChessGame currentGame;
 
     enum PlayerState {
-        WHITE,
-        BLACK,
+        WHITETEAM,
+        BLACKTEAM,
         OBSERVER,
         MENU,
         UNLOGGED
@@ -47,7 +47,7 @@ public class ChessClient {
 
             try {
                 result = evalInput(line);
-                System.out.print(SET_TEXT_COLOR_GREEN + result);
+                System.out.print(SET_TEXT_COLOR_MAGENTA + result);
             } catch (Throwable e) {
                 String msg = e.toString();
                 System.out.print(msg);
@@ -79,10 +79,65 @@ public class ChessClient {
                 default -> menu();
             };
         }
+        if (playerState == BLACKTEAM) {
+            gameViewBlack();
+        }
+        else {
+            gameView()
+        }
         return switch (cmd) {
             case "concede", "leave" -> concedeGame();
             default -> move(line);
         };
+    }
+    private void gameViewBlack() {
+        String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
+                "    a   b  c   d   e  f  g   h     " +
+                RESET_TEXT_BOLD_FAINT;
+        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        ChessBoard board = currentGame.getBoard();
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 0; j <= 9; j++) {
+                if (j == 0 || j == 9) {
+                    boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + i + " ";
+                    boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK;
+                } else {
+                    ChessPosition pos = new ChessPosition(i, j);
+                    String piece = buildPiece(board.getPiece(pos));
+                    if (i % 2 == j % 2) {
+                        boardView += SET_BG_COLOR_WHITE;
+                    }
+                    else {
+                        boardView += SET_BG_COLOR_BLACK;
+                    }
+                    boardView += piece;
+                }
+            }
+            boardView += "\n";
+        }
+        boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
+                "    a   b  c   d   e  f  g   h     " +
+                RESET_TEXT_BOLD_FAINT;
+        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        System.out.print(boardView);
+    }
+    private String buildPiece(ChessPiece piece) {
+        if (piece == null) {
+            return EMPTY;
+        }
+        String color = switch (piece.getTeamColor()) {
+            case WHITE -> SET_TEXT_COLOR_BLUE;
+            case BLACK -> SET_TEXT_COLOR_RED;
+        };
+        String type = switch (piece.getPieceType()) {
+            case KING -> WHITE_KING;
+            case QUEEN -> WHITE_QUEEN;
+            case BISHOP -> WHITE_BISHOP;
+            case KNIGHT -> WHITE_KNIGHT;
+            case ROOK -> WHITE_ROOK;
+            case PAWN -> WHITE_PAWN;
+        };
+        return color + type;
     }
     private String move(String move) {
         return "moves not implemented";
@@ -126,9 +181,9 @@ public class ChessClient {
                 int gameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
                 if (color.equals("WHITE")) {
-                    playerState = WHITE;
+                    playerState = WHITETEAM;
                 } else if (color.equals("BLACK")) {
-                    playerState = BLACK;
+                    playerState = BLACKTEAM;
                 }
                 else {
                     return color + " is not valid. must be BLACK or WHITE";
