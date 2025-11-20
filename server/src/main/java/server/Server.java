@@ -43,8 +43,7 @@ public class Server {
     private void errorHandler(Context ctx, String error) {
         Map<String, String> result = Map.of("message", "Error: " + error);
         var serializer = new Gson();
-        var resultSerialized = serializer.toJson(result);
-        ctx.result(resultSerialized);
+        ctx.result(serializer.toJson(result));
     }
     private void delete(Context ctx) throws DataAccessException {
         try {
@@ -58,10 +57,9 @@ public class Server {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), model.UserData.class);
         try {
-            AuthData result = userService.register(request);
+            AuthData newUser = userService.register(request);
             ctx.status(200);
-            var resultSerialized = serializer.toJson(result);
-            ctx.result(resultSerialized);
+            ctx.result(serializer.toJson(newUser));
         }
         catch (AlreadyTakenException error) {
             ctx.status(403);
@@ -79,10 +77,9 @@ public class Server {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), LoginUser.class);
         try {
-            AuthData result = userService.login(request);
+            AuthData user = userService.login(request);
             ctx.status(200);
-            var resultSerialized = serializer.toJson(result);
-            ctx.result(resultSerialized);
+            ctx.result(serializer.toJson(user));
         }
         catch (IncorrectPasswordException error) {
             ctx.status(401);
@@ -121,8 +118,7 @@ public class Server {
             userService.checkAuth(authToken);
             int gameID = gameService.createGame(request);
             ctx.status(200);
-            var resultSerialized = serializer.toJson(Map.of("gameID", gameID));
-            ctx.result(resultSerialized);
+            ctx.result(serializer.toJson(Map.of("gameID", gameID)));
         }
         catch (UnauthorizedException error) {
             ctx.status(401);
@@ -144,8 +140,7 @@ public class Server {
             userService.checkAuth(authToken);
             Collection<GameView> gameList = gameService.listGames();
             ctx.status(200);
-            var resultSerialized = serializer.toJson(Map.of("games", gameList));
-            ctx.result(resultSerialized);
+            ctx.result(serializer.toJson(Map.of("games", gameList)));
         }
         catch (UnauthorizedException error) {
             ctx.status(401);
@@ -169,8 +164,7 @@ public class Server {
             String username = dataAccess.checkAuthToken(authToken);
             GameData game = gameService.joinGame(request, username);
             ctx.status(200);
-            var resultSerialized = serializer.toJson(game);
-            ctx.result(resultSerialized);
+            ctx.result(serializer.toJson(game));
         }
         catch (BadRequestException error) {
             ctx.status(400);
