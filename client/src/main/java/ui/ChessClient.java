@@ -191,7 +191,7 @@ public class ChessClient {
             playerState = MENU;
             return "Registration Successful";
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password> <email>");
+        throw new ResponseException("Expected: <username> <password> <email>");
     }
     private String login(String... params) throws ResponseException {
         if (params.length >= 2) {
@@ -201,7 +201,7 @@ public class ChessClient {
             playerState = MENU;
             return "Log In Successful";
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password>");
+        throw new ResponseException("Expected: <username> <password>");
     }
     private String createGame(String... params) throws ResponseException {
         if (params.length >= 1) {
@@ -209,7 +209,7 @@ public class ChessClient {
             GameData game = server.createGame(new GameData(0, null, null, gameName, null));
             return "Game Created with ID " + game.gameID();
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gamename>");
+        throw new ResponseException("Expected: <gamename>");
     }
     private String joinGame(String... params) throws ResponseException {
         if (params.length >= 2) {
@@ -218,7 +218,7 @@ public class ChessClient {
                 String color = params[1].toUpperCase();
                 GameData gameData = server.joinGame(new JoinRequest(color, gameID));
                 if (gameData == null) {
-                    throw new ResponseException(ResponseException.Code.ClientError, "unable to join game");
+                    throw new ResponseException("unable to join game");
                 }
                 if (color.equals("WHITE")) {
                     playerState = WHITETEAM;
@@ -237,10 +237,10 @@ public class ChessClient {
                 }
                 return "Game Joined";
             } catch (NumberFormatException e) {
-                throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
+                throw new ResponseException("gameID must be numerical");
             }
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> [WHITE|BLACK]");
+        throw new ResponseException("Expected: <gameID> [WHITE|BLACK]");
     }
     private String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
@@ -250,11 +250,11 @@ public class ChessClient {
                 playerState = OBSERVER;
                 return "Observing Game";
             } catch (NumberFormatException e) {
-                throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
+                throw new ResponseException("gameID must be numerical");
             }
 
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID>");
+        throw new ResponseException("Expected: <gameID>");
     }
     private String listGames() throws ResponseException {
         GameList games = server.listGames();
