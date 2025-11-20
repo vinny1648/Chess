@@ -80,12 +80,7 @@ public class ChessClient {
                 default -> menu();
             };
         }
-        if (playerState == BLACKTEAM) {
-            gameViewBlack();
-        }
-        else {
-            gameView();
-        }
+        gameView();
         return switch (cmd) {
             case "concede", "leave" -> concedeGame();
             default -> move(line);
@@ -96,20 +91,30 @@ public class ChessClient {
         return "deleted database";
     }
     private void gameView() {
+        String edges;
+        if (playerState == BLACKTEAM) {
+            edges = "    h   g  f   e   d  c   b  a     ";
+        } else {
+            edges = "    a   b  c   d   e  f   g  h     ";
+        }
         String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    a   b  c   d   e  f   g  h     " +
+                edges +
                 RESET_TEXT_BOLD_FAINT;
         boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
         ChessBoard board = currentGame.getBoard();
         for (int i = 8; i >= 1; i--) {
             for (int j = 0; j <= 9; j++) {
+                int row = i;
+                if (playerState == BLACKTEAM) {
+                    row = Math.abs(i - 9);
+                }
                 if (j == 0 || j == 9) {
-                    boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + i + " ";
+                    boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + row + " ";
                     boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK;
                 } else {
-                    ChessPosition pos = new ChessPosition(i, j);
+                    ChessPosition pos = new ChessPosition(row, j);
                     String piece = buildPiece(board.getPiece(pos));
-                    if (i % 2 == j % 2) {
+                    if (i % 2 != j % 2) {
                         boardView += SET_BG_COLOR_WHITE;
                     }
                     else {
@@ -121,42 +126,12 @@ public class ChessClient {
             boardView += "\n";
         }
         boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    a   b  c   d   e  f   g  h     " +
+                edges +
                 RESET_TEXT_BOLD_FAINT;
         boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
         System.out.print(boardView);
     }
-    private void gameViewBlack() {
-        String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    h   g  f   e   d  c   b  a     " +
-                RESET_TEXT_BOLD_FAINT;
-        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
-        ChessBoard board = currentGame.getBoard();
-        for (int i = 1; i <= 8; i++) {
-            for (int j = 0; j <= 9; j++) {
-                if (j == 0 || j == 9) {
-                    boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + i + " ";
-                    boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK;
-                } else {
-                    ChessPosition pos = new ChessPosition(i, j);
-                    String piece = buildPiece(board.getPiece(pos));
-                    if (i % 2 == j % 2) {
-                        boardView += SET_BG_COLOR_WHITE;
-                    }
-                    else {
-                        boardView += SET_BG_COLOR_BLACK;
-                    }
-                    boardView += piece;
-                }
-            }
-            boardView += "\n";
-        }
-        boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                "    h   g  f   e   d  c   b  a     " +
-                RESET_TEXT_BOLD_FAINT;
-        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
-        System.out.print(boardView);
-    }
+
     private String buildPiece(ChessPiece piece) {
         if (piece == null) {
             return EMPTY;
@@ -229,12 +204,7 @@ public class ChessClient {
                     return color + " is not valid. must be BLACK or WHITE";
                 }
                 currentGame = gameData.game();
-                if (playerState == BLACKTEAM) {
-                    gameViewBlack();
-                }
-                else {
-                    gameView();
-                }
+                gameView();
                 return "Game Joined";
             } catch (NumberFormatException e) {
                 throw new ResponseException("gameID must be numerical");
