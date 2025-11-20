@@ -28,7 +28,7 @@ public class ServerFacade {
     }
 
     public void delete() throws ResponseException {
-        HttpRequest request = buildRequest("DELETE", "/", null);
+        HttpRequest request = buildRequest("DELETE", "/db", null);
         HttpResponse<String> response = sendRequest(request);
         handleResponse(response, null);
         auth = null;

@@ -64,6 +64,7 @@ public class ChessClient {
                 case "register" -> register(params);
                 case "login" -> login(params);
                 case "help" -> menu();
+                case "delete" -> delete();
                 case "quit" -> "quit";
                 default -> menu();
             };
@@ -89,6 +90,10 @@ public class ChessClient {
             case "concede", "leave" -> concedeGame();
             default -> move(line);
         };
+    }
+    private String delete() throws ResponseException {
+        server.delete();
+        return "deleted database";
     }
     private void gameView() {
         String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
@@ -211,6 +216,10 @@ public class ChessClient {
             try {
                 int gameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
+                GameData gameData = server.joinGame(new JoinRequest(color, gameID));
+                if (gameData == null) {
+                    throw new ResponseException(ResponseException.Code.ClientError, "unable to join game");
+                }
                 if (color.equals("WHITE")) {
                     playerState = WHITETEAM;
                 } else if (color.equals("BLACK")) {
@@ -219,8 +228,13 @@ public class ChessClient {
                 else {
                     return color + " is not valid. must be BLACK or WHITE";
                 }
-                GameData gameData = server.joinGame(new JoinRequest(color, gameID));
                 currentGame = gameData.game();
+                if (playerState == BLACKTEAM) {
+                    gameViewBlack();
+                }
+                else {
+                    gameView();
+                }
                 return "Game Joined";
             } catch (NumberFormatException e) {
                 throw new ResponseException(ResponseException.Code.ClientError, "gameID must be numerical");
