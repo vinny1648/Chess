@@ -91,16 +91,7 @@ public class ChessClient {
         return "deleted database";
     }
     private void gameView() {
-        String edges;
-        if (playerState == BLACKTEAM) {
-            edges = "    h   g  f   e   d  c   b  a     ";
-        } else {
-            edges = "    a   b  c   d   e  f   g  h     ";
-        }
-        String boardView = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                edges +
-                RESET_TEXT_BOLD_FAINT;
-        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        String boardView = getEdges();
         ChessBoard board = currentGame.getBoard();
         for (int i = 8; i >= 1; i--) {
             for (int j = 0; j <= 9; j++) {
@@ -125,13 +116,22 @@ public class ChessClient {
             }
             boardView += "\n";
         }
-        boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
-                edges +
-                RESET_TEXT_BOLD_FAINT;
-        boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        boardView += getEdges();
         System.out.print(boardView);
     }
-
+    private String getEdges() {
+        String edges;
+        if (playerState == BLACKTEAM) {
+            edges = "    h   g  f   e   d  c   b  a     ";
+        } else {
+            edges = "    a   b  c   d   e  f   g  h     ";
+        }
+        String edge = SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + SET_TEXT_BOLD +
+                edges +
+                RESET_TEXT_BOLD_FAINT;
+        edge += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK + "\n";
+        return edge;
+    }
     private String buildPiece(ChessPiece piece) {
         if (piece == null) {
             return EMPTY;
