@@ -9,14 +9,16 @@ import static ui.ChessClient.PlayerState.*;
 import static ui.EscapeSequences.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class ChessClient {
 
     private final ServerFacade server;
-    private PlayerState playerState = UNLOGGED;
+    private PlayerState playerState;
     private String username;
     private ChessGame currentGame;
+    private HashMap<Integer, Integer> glist;
 
     enum PlayerState {
         WHITETEAM,
@@ -28,6 +30,8 @@ public class ChessClient {
 
     public ChessClient(String serverUrl) throws ResponseException{
         server = new ServerFacade(serverUrl);
+        playerState = UNLOGGED;
+        glist = new HashMap<>();
     }
 
     public void run() {
@@ -49,7 +53,7 @@ public class ChessClient {
                 result = evalInput(line);
                 System.out.print(SET_TEXT_COLOR_MAGENTA + result);
             } catch (Throwable e) {
-                String msg = e.toString();
+                String msg = e.getMessage();
                 System.out.print(msg);
             }
         }
@@ -96,14 +100,16 @@ public class ChessClient {
         for (int i = 8; i >= 1; i--) {
             for (int j = 0; j <= 9; j++) {
                 int row = i;
+                int col = j;
                 if (playerState == BLACKTEAM) {
                     row = Math.abs(i - 9);
+                    col = Math.abs(j - 9);
                 }
                 if (j == 0 || j == 9) {
                     boardView += SET_TEXT_COLOR_BLACK + SET_BG_COLOR_LIGHT_GREY + " " + row + " ";
                     boardView += SET_TEXT_COLOR_WHITE + SET_BG_COLOR_BLACK;
                 } else {
-                    ChessPosition pos = new ChessPosition(row, j);
+                    ChessPosition pos = new ChessPosition(row, col);
                     String piece = buildPiece(board.getPiece(pos));
                     if (i % 2 != j % 2) {
                         boardView += SET_BG_COLOR_WHITE;
@@ -181,8 +187,9 @@ public class ChessClient {
     private String createGame(String... params) throws ResponseException {
         if (params.length >= 1) {
             String gameName = params[0];
-            GameData game = server.createGame(new GameData(0, null, null, gameName, null));
-            return "Game Created with ID " + game.gameID();
+            server.createGame(new GameData(0, null, null, gameName, null));
+            listGames();
+            return "Game Created";
         }
         throw new ResponseException("Expected: <gamename>");
     }
@@ -191,7 +198,7 @@ public class ChessClient {
             try {
                 int gameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
-                GameData gameData = server.joinGame(new JoinRequest(color, gameID));
+                GameData gameData = server.joinGame(new JoinRequest(color, glist.get(gameID)));
                 if (gameData == null) {
                     throw new ResponseException("unable to join game");
                 }
@@ -216,8 +223,9 @@ public class ChessClient {
         if (params.length >= 1) {
             try {
                 int gameID = Integer.parseInt(params[0]);
-                server.joinGame(new JoinRequest(null, gameID));
+                currentGame = server.joinGame(new JoinRequest(null, gameID)).game();
                 playerState = OBSERVER;
+                gameView();
                 return "Observing Game";
             } catch (NumberFormatException e) {
                 throw new ResponseException("gameID must be numerical");
@@ -228,10 +236,21 @@ public class ChessClient {
     }
     private String listGames() throws ResponseException {
         GameList games = server.listGames();
-        String gamesList = "ID  : Name\n";
+        glist.clear();
+        String gamesList = "ID : Name : Players\n";
         for (int i = 0; i < games.games().size(); i++) {
             GameData game = games.games().get(i);
-            gamesList = gamesList + game.gameID() + ": " + game.gameName() + "\n";
+            String whitePlayer = "";
+            String blackPlayer = "";
+            if (game.whiteUsername() != null) {
+                whitePlayer = game.whiteUsername();
+            }
+            if (game.blackUsername() != null) {
+                blackPlayer = game.blackUsername();
+            }
+            String gameItem = (i + 1) + " : " + game.gameName() + " : w= " + whitePlayer + " b= " + blackPlayer + "\n";
+            glist.put(i+1, game.gameID());
+            gamesList = gamesList + gameItem;
         }
         return gamesList;
     }

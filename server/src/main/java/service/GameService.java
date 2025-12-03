@@ -65,6 +65,9 @@ public class GameService {
             }
             adjustedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
         }
+        else if (Objects.equals(joinRequest.playerColor(), null)) {
+            adjustedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+        }
         else {
             throw new BadRequestException("No exsisting team color");
         }
