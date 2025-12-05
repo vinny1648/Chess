@@ -10,6 +10,7 @@ import static ui.EscapeSequences.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class ChessClient {
@@ -36,7 +37,11 @@ public class ChessClient {
 
     public void run() {
         System.out.println("Welcome to 240 Chess. Type Help to get started");
-        System.out.print(menu());
+        try {
+            System.out.print(menu());
+        } catch (Throwable e) {
+            System.out.print("Error: menu error");
+        }
 
         Scanner scanner = new Scanner(System.in);
         String result = "";
@@ -84,17 +89,30 @@ public class ChessClient {
                 default -> menu();
             };
         }
-        gameView();
-        return switch (cmd) {
-            case "concede", "leave" -> concedeGame();
-            default -> move(line);
-        };
+        else {
+            gameView();
+            return switch (cmd) {
+                case "concede" -> concedeGame();
+                case "leave" -> leaveGame();
+                case "board" -> gameView();
+                case "move" -> move(params);
+                case "validmoves" -> gameView(params);
+                case "help" -> menu();
+                default -> menu();
+            };
+        }
     }
     private String delete() throws ResponseException {
         server.delete();
         return "deleted database";
     }
-    private void gameView() {
+    private String gameView(String... params) throws ResponseException {
+        if (params.length > 1) {
+            throw new ResponseException("Expected: <position of piece>");
+        }
+        if (!Objects.equals(params[0], "null")) {
+            String pass = "pass";
+        }
         String boardView = getEdges();
         ChessBoard board = currentGame.getBoard();
         for (int i = 8; i >= 1; i--) {
@@ -124,6 +142,7 @@ public class ChessClient {
         }
         boardView += getEdges();
         System.out.print(boardView);
+        return "";
     }
     private String getEdges() {
         String edges;
@@ -156,12 +175,16 @@ public class ChessClient {
         };
         return color + type;
     }
-    private String move(String move) {
+    private String move(String... params) {
         return "moves not implemented";
     }
     private String concedeGame() {
         playerState = MENU;
         return "Game Conceded";
+    }
+    private String leaveGame() {
+        playerState = MENU;
+        return "Game Left";
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
@@ -263,7 +286,7 @@ public class ChessClient {
         return "Log Out Successful";
     }
 
-    private String menu() {
+    private String menu() throws ResponseException {
         if (playerState == UNLOGGED) {
             return """
                     - register <username> <password> <email>
@@ -271,8 +294,8 @@ public class ChessClient {
                     - help
                     - quit
                     """;
-        }
-        return """
+        } else if (playerState == MENU) {
+            return """
                 - creategame <gamename>
                 - joingame <gameID> [WHITE|BLACK]
                 - observe <gameID>
@@ -281,5 +304,16 @@ public class ChessClient {
                 - help
                 - quit
                 """;
+        } else {
+            gameView("null");
+            return """
+                - board
+                - move <from> <to>
+                - vaildmoves <position of piece>
+                - leave
+                - concede
+                - help
+                """;
+        }
     }
 }
