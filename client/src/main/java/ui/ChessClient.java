@@ -215,6 +215,8 @@ public class ChessClient {
                 return "Game Joined";
             } catch (NumberFormatException e) {
                 throw new ResponseException("gameID must be numerical");
+            } catch (NullPointerException e) {
+                throw new ResponseException("gameID is invalid");
             }
         }
         throw new ResponseException("Expected: <gameID> [WHITE|BLACK]");
@@ -223,7 +225,7 @@ public class ChessClient {
         if (params.length >= 1) {
             try {
                 int gameID = Integer.parseInt(params[0]);
-                currentGame = server.joinGame(new JoinRequest(null, gameID)).game();
+                currentGame = server.joinGame(new JoinRequest(null, glist.get(gameID))).game();
                 playerState = OBSERVER;
                 gameView();
                 return "Observing Game";
