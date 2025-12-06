@@ -6,6 +6,7 @@ import io.javalin.*;
 import io.javalin.http.Context;
 import model.*;
 import service.*;
+import websocket.WebSocketHandler;
 
 import java.util.Collection;
 import java.util.Map;
@@ -17,6 +18,7 @@ public class Server {
     private final UserService userService;
     private DataAccess dataAccess;
     private final GameService gameService;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
         try {
@@ -27,14 +29,21 @@ public class Server {
         userService = new UserService(this.dataAccess);
         gameService = new GameService(this.dataAccess);
 
+        webSocketHandler = new WebSocketHandler();
+
         server = Javalin.create(config -> config.staticFiles.add("web"))
-            .delete("db", this::delete)
-            .post("user", this::register)
-            .post("session", this::login)
-            .delete("session", this::logout)
-            .post("game", this::createGame)
-            .get("game", this::listGames)
-            .put("game", this::joinGame);
+                .delete("db", this::delete)
+                .post("user", this::register)
+                .post("session", this::login)
+                .delete("session", this::logout)
+                .post("game", this::createGame)
+                .get("game", this::listGames)
+                .put("game", this::joinGame)
+                .ws("ws", ws -> {
+                    ws.onConnect(webSocketHandler);
+                    ws.onMessage(webSocketHandler);
+                    ws.onClose(webSocketHandler);
+                });
         // Register your endpoints and exception handlers here.
 
     }
