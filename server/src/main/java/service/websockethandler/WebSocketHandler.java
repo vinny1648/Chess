@@ -1,4 +1,4 @@
-package server.websockethandler;
+package service.websockethandler;
 
 import com.google.gson.Gson;
 import io.javalin.websocket.WsCloseContext;
