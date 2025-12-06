@@ -4,7 +4,6 @@ import chess.*;
 import exception.ResponseException;
 import model.*;
 import Facades.*;
-import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
 import static ui.ChessClient.PlayerState.*;
@@ -24,6 +23,7 @@ public class ChessClient implements NotificationHandler {
     private String username;
     private String auth;
     private ChessGame currentGame;
+    private Integer currentGameID;
     private HashMap<Integer, Integer> glist;
 
     @Override
@@ -195,8 +195,16 @@ public class ChessClient implements NotificationHandler {
         return "Game Conceded";
     }
     private String leaveGame() {
-        playerState = MENU;
-        return "Game Left";
+        try {
+            ws.leaveGame(auth, currentGameID);
+
+            playerState = MENU;
+            currentGame = null;
+            currentGameID = null;
+            return "Game Left";
+        } catch (Throwable e) {
+            return "(leaveGame) Game Error: " + e.getMessage();
+        }
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
@@ -231,10 +239,10 @@ public class ChessClient implements NotificationHandler {
     private String joinGame(String... params) throws ResponseException {
         if (params.length >= 2) {
             try {
-                int gameID = Integer.parseInt(params[0]);
+                currentGameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
-                GameData gameData = server.joinGame(new JoinRequest(color, glist.get(gameID)));
-                ws.joinGame(auth, gameID);
+                GameData gameData = server.joinGame(new JoinRequest(color, glist.get(currentGameID)));
+                ws.joinGame(auth, currentGameID);
                 if (gameData == null) {
                     throw new ResponseException("unable to join game");
                 }
@@ -260,8 +268,8 @@ public class ChessClient implements NotificationHandler {
     private String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
             try {
-                int gameID = Integer.parseInt(params[0]);
-                currentGame = server.joinGame(new JoinRequest(null, glist.get(gameID))).game();
+                currentGameID = Integer.parseInt(params[0]);
+                currentGame = server.joinGame(new JoinRequest(null, glist.get(currentGameID))).game();
                 playerState = OBSERVER;
                 gameView();
                 return "Observing Game";
