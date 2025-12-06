@@ -1,4 +1,4 @@
-package server;
+package Facades;
 
 import com.google.gson.Gson;
 import exception.ResponseException;
@@ -24,7 +24,7 @@ public class ServerFacade {
         HttpResponse<String> response = sendRequest(request);
         AuthData data = handleResponse(response, AuthData.class);
         auth = data.authToken();
-        return data.username();
+        return auth;
     }
 
     public void delete() throws ResponseException {
@@ -39,7 +39,7 @@ public class ServerFacade {
         HttpResponse<String> response = sendRequest(request);
         AuthData data = handleResponse(response, AuthData.class);
         auth = data.authToken();
-        return data.username();
+        return auth;
     }
 
     public void logout() throws ResponseException {
