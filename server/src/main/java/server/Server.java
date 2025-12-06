@@ -5,8 +5,8 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import model.*;
+import server.websockethandler.*;
 import service.*;
-import websocket.WebSocketHandler;
 
 import java.util.Collection;
 import java.util.Map;
