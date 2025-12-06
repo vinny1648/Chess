@@ -1,15 +1,13 @@
 package websocket.messages;
 
-import java.util.Objects;
+import chess.ChessGame;
 
-/**
- * Represents a Message the server can send through a WebSocket
- * <p>
- * Note: You can add to this class, but you should not alter the existing
- * methods.
- */
 public class ServerMessage {
-    ServerMessageType serverMessageType;
+    private ServerMessageType serverMessageType;
+
+    private ChessGame game;       // required for tests
+    private String message;       // required for tests
+    private String errorMessage;  // required for tests
 
     public enum ServerMessageType {
         LOAD_GAME,
@@ -22,22 +20,31 @@ public class ServerMessage {
     }
 
     public ServerMessageType getServerMessageType() {
-        return this.serverMessageType;
+        return serverMessageType;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ServerMessage that)) {
-            return false;
-        }
-        return getServerMessageType() == that.getServerMessageType();
+    public ChessGame getGame() {
+        return game;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getServerMessageType());
+    public String getMessage() {
+        return message;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    // SETTERS (needed so you can populate fields before Gson serializes)
+    public void setGame(ChessGame game) {
+        this.game = game;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

@@ -29,7 +29,7 @@ public class Server {
         userService = new UserService(this.dataAccess);
         gameService = new GameService(this.dataAccess);
 
-        webSocketHandler = new WebSocketHandler();
+        webSocketHandler = new WebSocketHandler(this.dataAccess);
 
         server = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("db", this::delete)
