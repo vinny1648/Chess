@@ -3,7 +3,9 @@ package ui;
 import chess.*;
 import exception.ResponseException;
 import model.*;
-import server.ServerFacade;
+import Facades.*;
+import websocket.commands.UserGameCommand;
+import websocket.messages.ServerMessage;
 
 import static ui.ChessClient.PlayerState.*;
 import static ui.EscapeSequences.*;
@@ -13,13 +15,22 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
 
-public class ChessClient {
+public class ChessClient implements NotificationHandler {
 
     private final ServerFacade server;
+    private final WebSocketFacade ws;
+
     private PlayerState playerState;
     private String username;
+    private String auth;
     private ChessGame currentGame;
     private HashMap<Integer, Integer> glist;
+
+    @Override
+    public void notify(ServerMessage notification) {
+        System.out.println(SET_TEXT_COLOR_RED + notification.getMessage());
+        System.out.print("\n" + ERASE_SCREEN + ">>> " + SET_TEXT_COLOR_MAGENTA);
+    }
 
     enum PlayerState {
         WHITETEAM,
@@ -31,6 +42,7 @@ public class ChessClient {
 
     public ChessClient(String serverUrl) throws ResponseException{
         server = new ServerFacade(serverUrl);
+        ws = new WebSocketFacade(serverUrl, this);
         playerState = UNLOGGED;
         glist = new HashMap<>();
     }
@@ -188,10 +200,10 @@ public class ChessClient {
     }
     private String register(String... params) throws ResponseException{
         if (params.length >= 3) {
-            String usrnm = params[0];
+            username = params[0];
             String password = params[1];
             String email = params[2];
-            username = server.register(new UserData(usrnm, password, email));
+            auth = server.register(new UserData(username, password, email));
             playerState = MENU;
             return "Registration Successful";
         }
@@ -199,9 +211,9 @@ public class ChessClient {
     }
     private String login(String... params) throws ResponseException {
         if (params.length >= 2) {
-            String usrnm = params[0];
+            username = params[0];
             String password = params[1];
-            username = server.login(new LoginUser(usrnm, password));
+            auth = server.login(new LoginUser(username, password));
             playerState = MENU;
             return "Log In Successful";
         }
@@ -222,6 +234,7 @@ public class ChessClient {
                 int gameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
                 GameData gameData = server.joinGame(new JoinRequest(color, glist.get(gameID)));
+                ws.joinGame(auth, gameID);
                 if (gameData == null) {
                     throw new ResponseException("unable to join game");
                 }
@@ -283,6 +296,7 @@ public class ChessClient {
         server.logout();
         playerState = UNLOGGED;
         username = null;
+        auth = null;
         return "Log Out Successful";
     }
 
