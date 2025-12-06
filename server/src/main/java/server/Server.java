@@ -19,7 +19,6 @@ public class Server {
     private final GameService gameService;
 
     public Server() {
-        server = Javalin.create(config -> config.staticFiles.add("web"));
         try {
             dataAccess = new MySqlDataAccess();
         } catch (Exception E) {
@@ -28,14 +27,14 @@ public class Server {
         userService = new UserService(this.dataAccess);
         gameService = new GameService(this.dataAccess);
 
-
-        server.delete("db", this::delete);
-        server.post("user", this::register);
-        server.post("session", this::login);
-        server.delete("session", this::logout);
-        server.post("game", this::createGame);
-        server.get("game", this::listGames);
-        server.put("game", this::joinGame);
+        server = Javalin.create(config -> config.staticFiles.add("web"))
+            .delete("db", this::delete)
+            .post("user", this::register)
+            .post("session", this::login)
+            .delete("session", this::logout)
+            .post("game", this::createGame)
+            .get("game", this::listGames)
+            .put("game", this::joinGame);
         // Register your endpoints and exception handlers here.
 
     }
