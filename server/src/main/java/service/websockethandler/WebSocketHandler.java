@@ -2,6 +2,7 @@ package service.websockethandler;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -17,6 +18,8 @@ import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
@@ -56,7 +59,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
         ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        if (dataAccess.checkAuthToken(authToken) == null) {
+        String playerName = dataAccess.checkAuthToken(authToken);
+        if (playerName == null) {
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             msg.setErrorMessage("Unauthorized Connection");
             session.getRemote().sendString(gson.toJson(msg));
@@ -65,17 +69,82 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.add(session, gameID);
         GameData data = dataAccess.getGame(gameID);
         ChessGame game = data.game();
-        String message = "Connected to game: " + data.gameName();
+        String message = playerName + " connected to " + data.gameName() + " as ";
+        if (playerName.equals(data.whiteUsername())) {
+            message += "WHITE player.";
+        }
+        else if (playerName.equals(data.blackUsername())) {
+            message += "BLACK player";
+        }
+        else {
+            message += "an observer";
+        }
 
         msg.setGame(game);
         msg.setMessage(message);
 
         connections.broadcast(gameID, msg);
     }
-    private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException {
-        String message = "";
-        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        connections.broadcast(gameID, notification);
+    private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException, DataAccessException {
+        ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        if (dataAccess.checkAuthToken(authToken) == null) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage("Unauthorized Connection");
+            session.getRemote().sendString(gson.toJson(msg));
+            throw  new DataAccessException("Unauthorized Connection");
+        }
+        GameData data = dataAccess.getGame(gameID);
+        ChessGame game = data.game();
+        String playerTurn = "";
+        ChessGame.TeamColor afterMove;
+        if (game.getTeamTurn() == ChessGame.TeamColor.WHITE) {
+            playerTurn = data.whiteUsername();
+            afterMove = ChessGame.TeamColor.BLACK;
+        }
+        else {
+            playerTurn = data.blackUsername();
+            afterMove = ChessGame.TeamColor.WHITE;
+        }
+        String message;
+        if (!Objects.equals(playerTurn, dataAccess.checkAuthToken(authToken))) {
+            message = "It is not your turn";
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage(message);
+            session.getRemote().sendString(gson.toJson(msg));
+        } else {
+            try {
+                game.makeMove(move);
+                dataAccess.removeGame(gameID);
+                data = new GameData(gameID, data.whiteUsername(), data.blackUsername(), data.gameName(), game);
+                dataAccess.createGame(data);
+                Map<Integer, String> vtranslation = Map.of(
+                        1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
+                );
+                message = playerTurn + " moved " + vtranslation.get(move.getStartPosition().getRow()) + move.getStartPosition().getColumn() +
+                        " to " + vtranslation.get(move.getEndPosition().getRow()) + move.getEndPosition().getColumn();
+                if (game.isInCheck(afterMove)) {
+                    message += " CHECK!";
+                }
+                if (game.isInCheckmate(afterMove)) {
+                    message = "CHECKMATE! " + playerTurn + "HAS WON";
+                    endGame(gameID);
+                }
+                if (game.isInStalemate(afterMove)) {
+                    message = "Stalemate. GAME DRAW";
+                    endGame(gameID);
+                }
+                msg.setMessage(message);
+                connections.broadcast(gameID, msg);
+            } catch (InvalidMoveException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
+    private void endGame(Integer gameID) {
+        for (Session c : connections.gameSessions(gameID)) {
+            connections.remove(c, gameID);
+        }
     }
 
     private void leave(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
