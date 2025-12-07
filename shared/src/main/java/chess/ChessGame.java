@@ -40,11 +40,13 @@ public class ChessGame {
     private boolean neRookHasMoved;
     private ChessPosition enPassantablePawn;
     private ChessPosition enPassantPosition;
+    private boolean gameEnd;
 
 
     public ChessGame() {
         this.turn = TeamColor.WHITE;
         this.board = new ChessBoard();
+        this.gameEnd = false;
         wKing = new ChessPosition(1, 5);
         wKingHasMoved = false;
         bKing = new ChessPosition(8, 5);
@@ -75,6 +77,12 @@ public class ChessGame {
     public enum TeamColor {
         WHITE,
         BLACK
+    }
+    public boolean gameIsOver() {
+        return gameEnd;
+    }
+    public void gameOver() {
+        this.gameEnd = true;
     }
     public boolean testEP (ChessMove move, ChessPiece piece) {
         boolean success = true;
@@ -381,6 +389,7 @@ public class ChessGame {
                 }
             }
         }
+        this.gameEnd = true;
         return true;
     }
 
@@ -422,6 +431,7 @@ public class ChessGame {
                 }
             }
         }
+        this.gameEnd = true;
         return true;
     }
 
