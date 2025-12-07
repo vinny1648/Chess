@@ -125,7 +125,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     message += " CHECK!";
                 }
                 if (game.isInCheckmate(afterMove)) {
-                    message += "\nCHECKMATE! " + playerTurn + "HAS WON";
+                    message += "\nCHECKMATE! " + playerTurn + " HAS WON!";
                 }
                 if (game.isInStalemate(afterMove)) {
                     message += "\nStalemate. GAME DRAW";
@@ -153,18 +153,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             msg.setErrorMessage("Unauthorized");
             session.getRemote().sendString(gson.toJson(msg));
-            throw  new DataAccessException("Unauthorized Disconnect");
+            throw new DataAccessException("Unauthorized Disconnect");
         }
         GameData data = dataAccess.getGame(gameID);
         String message = playerName + " left the game.";
         msg.setMessage(message);
         connections.remove(session, gameID);
-        if (Objects.equals(dataAccess.getGame(gameID).whiteUsername(), playerName)) {
+        if (Objects.equals(data.whiteUsername(), playerName)) {
             dataAccess.removeGame(gameID);
             dataAccess.createGame(new GameData(gameID, null, data.blackUsername(), data.gameName(), data.game()));
-        } else if (Objects.equals(dataAccess.getGame(gameID).whiteUsername(), playerName)) {
+        } else if (Objects.equals(data.blackUsername(), playerName)) {
             dataAccess.removeGame(gameID);
-            dataAccess.createGame(new GameData(gameID, data.blackUsername(), null, data.gameName(), data.game()));
+            dataAccess.createGame(new GameData(gameID, data.whiteUsername(), null, data.gameName(), data.game()));
         }
         if (connections.gameEmpty(gameID) && data.game().gameIsOver()) {
             dataAccess.removeGame(gameID);
@@ -175,10 +175,38 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         msg.setMessage(message);
         session.getRemote().sendString(gson.toJson(msg));
     }
-    private void resign(String authToken, Integer gameID, Session session) throws IOException {
-
-        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(gameID, notification);
-        connections.remove(session, gameID);
+    private void resign(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
+        ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        String playerName = dataAccess.checkAuthToken(authToken);
+        if (playerName == null) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage("Unauthorized");
+            session.getRemote().sendString(gson.toJson(msg));
+            throw new DataAccessException("Unauthorized Action");
+        }
+        GameData data = dataAccess.getGame(gameID);
+        String message;
+        if (Objects.equals(data.whiteUsername(), playerName)) {
+            message = playerName + " resigned. " + data.blackUsername() + " HAS WON!";
+            msg.setMessage(message);
+            resignGameUpdate(gameID, data);
+            connections.broadcast(gameID, msg);
+        } else if (Objects.equals(dataAccess.getGame(gameID).blackUsername(), playerName)) {
+            message = playerName + " resigned. " + data.whiteUsername() + " HAS WON!";
+            msg.setMessage(message);
+            resignGameUpdate(gameID, data);
+            connections.broadcast(gameID, msg);
+        } else {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            message = "observers can't resign";
+            msg.setErrorMessage(message);
+            session.getRemote().sendString(gson.toJson(msg));
+        }
+    }
+    private void resignGameUpdate(Integer gameID, GameData data) throws DataAccessException {
+        ChessGame game = data.game();
+        dataAccess.removeGame(gameID);
+        game.gameOver();
+        dataAccess.createGame(new GameData(gameID, data.blackUsername(), data.whiteUsername(), data.gameName(), game));
     }
 }
