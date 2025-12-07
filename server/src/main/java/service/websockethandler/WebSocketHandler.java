@@ -126,11 +126,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
                 if (game.isInCheckmate(afterMove)) {
                     message = "CHECKMATE! " + playerTurn + "HAS WON";
-                    endGame(gameID);
                 }
                 if (game.isInStalemate(afterMove)) {
                     message = "Stalemate. GAME DRAW";
-                    endGame(gameID);
                 }
                 msg.setMessage(message);
                 connections.broadcast(gameID, msg);
@@ -138,11 +136,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 throw new RuntimeException(e);
             }
 
-        }
-    }
-    private void endGame(Integer gameID) {
-        for (Session c : connections.gameSessions(gameID)) {
-            connections.remove(c, gameID);
         }
     }
 
@@ -156,6 +149,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             throw  new DataAccessException("Unauthorized Disconnect");
         }
         GameData data = dataAccess.getGame(gameID);
+        String message = playerName + " left the game.";
+        msg.setMessage(message);
+        connections.remove(session, gameID);
         if (Objects.equals(dataAccess.getGame(gameID).whiteUsername(), playerName)) {
             dataAccess.removeGame(gameID);
             dataAccess.createGame(new GameData(gameID, null, data.blackUsername(), data.gameName(), data.game()));
@@ -163,10 +159,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             dataAccess.removeGame(gameID);
             dataAccess.createGame(new GameData(gameID, data.blackUsername(), null, data.gameName(), data.game()));
         }
-        String message = playerName + " left the game.";
+        if (connections.gameEmpty(gameID) && data.game().gameIsOver()) {
+            dataAccess.removeGame(gameID);
+        } else {
+            connections.broadcast(gameID, msg);
+        }
+        message = "left game.";
         msg.setMessage(message);
-        connections.remove(session, gameID);
-        connections.broadcast(gameID, msg);
+        session.getRemote().sendString(gson.toJson(msg));
     }
     private void resign(String authToken, Integer gameID, Session session) throws IOException {
         var message = "";

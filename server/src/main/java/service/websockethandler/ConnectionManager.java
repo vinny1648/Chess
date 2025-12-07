@@ -27,8 +27,8 @@ public class ConnectionManager {
         }
     }
 
-    public ArrayList<Session> gameSessions(Integer gameID) {
-        return connections.get(gameID);
+    public boolean gameEmpty(Integer gameID) {
+        return !connections.containsKey(gameID);
     }
 
     public void broadcast(Integer gameID, ServerMessage notification) throws IOException {
