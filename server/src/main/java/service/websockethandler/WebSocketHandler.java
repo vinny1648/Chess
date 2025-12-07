@@ -65,10 +65,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.add(session, gameID);
         GameData data = dataAccess.getGame(gameID);
         ChessGame game = data.game();
-        String connectMessage = "Connected to game: " + data.gameName();
+        String message = "Connected to game: " + data.gameName();
 
         msg.setGame(game);
-        msg.setMessage(connectMessage);
+        msg.setMessage(message);
 
         connections.broadcast(gameID, msg);
     }
@@ -78,11 +78,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(gameID, notification);
     }
 
-    private void leave(String authToken, Integer gameID, Session session) throws IOException {
-        String message = "";
-        ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(gameID, notification);
+    private void leave(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
+        ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        if (dataAccess.checkAuthToken(authToken) == null) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage("Unauthorized");
+            session.getRemote().sendString(gson.toJson(msg));
+            throw  new DataAccessException("Unauthorized Disconnect");
+        }
+        String message = dataAccess.checkAuthToken(authToken) + "left the game.";
+        msg.setMessage(message);
         connections.remove(session, gameID);
+        connections.broadcast(gameID, msg);
     }
     private void resign(String authToken, Integer gameID, Session session) throws IOException {
         var message = "";
