@@ -1,6 +1,7 @@
 package service.websockethandler;
 
 import chess.ChessGame;
+import chess.ChessMove;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -39,7 +40,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             UserGameCommand userGameCommand = new Gson().fromJson(ctx.message(), UserGameCommand.class);
             switch (userGameCommand.getCommandType()) {
                 case CONNECT -> connect(userGameCommand.getAuthToken(), userGameCommand.getGameID(), ctx.session);
-                case MAKE_MOVE -> makeMove(userGameCommand.getAuthToken(), userGameCommand.getGameID(), ctx.session);
+                case MAKE_MOVE -> makeMove(userGameCommand.getAuthToken(), userGameCommand.getGameID(), userGameCommand.getMove(), ctx.session);
                 case LEAVE -> leave(userGameCommand.getAuthToken(), userGameCommand.getGameID(), ctx.session);
                 case RESIGN -> resign(userGameCommand.getAuthToken(), userGameCommand.getGameID(), ctx.session);
             }
@@ -54,34 +55,39 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void connect(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
+        ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        if (dataAccess.checkAuthToken(authToken) == null) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage("Unauthorized Connection");
+            session.getRemote().sendString(gson.toJson(msg));
+            throw  new DataAccessException("Unauthorized Connection");
+        }
         connections.add(session, gameID);
-
         GameData data = dataAccess.getGame(gameID);
         ChessGame game = data.game();
+        String connectMessage = "Connected to game: " + data.gameName();
 
-        ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
         msg.setGame(game);
-        msg.setMessage(null);
-        msg.setErrorMessage(null);
+        msg.setMessage(connectMessage);
 
-        session.getRemote().sendString(gson.toJson(msg));
+        connections.broadcast(gameID, msg);
     }
-    private void makeMove(String authToken, Integer gameID, Session session) throws IOException {
+    private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException {
         String message = "";
         ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        connections.broadcast(session, notification);
+        connections.broadcast(gameID, notification);
     }
 
     private void leave(String authToken, Integer gameID, Session session) throws IOException {
         String message = "";
         ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(session, notification);
-        connections.remove(session);
+        connections.broadcast(gameID, notification);
+        connections.remove(session, gameID);
     }
     private void resign(String authToken, Integer gameID, Session session) throws IOException {
         var message = "";
         ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(session, notification);
-        connections.remove(session);
+        connections.broadcast(gameID, notification);
+        connections.remove(session, gameID);
     }
 }
