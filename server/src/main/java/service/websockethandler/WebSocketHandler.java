@@ -94,7 +94,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
         GameData data = dataAccess.getGame(gameID);
         ChessGame game = data.game();
-        String playerTurn = "";
+        String playerTurn;
         ChessGame.TeamColor afterMove;
         if (game.getTeamTurn() == ChessGame.TeamColor.WHITE) {
             playerTurn = data.whiteUsername();
@@ -112,10 +112,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             session.getRemote().sendString(gson.toJson(msg));
         } else {
             try {
+                if (game.gameIsOver()) {
+                    throw new InvalidMoveException("Game is Over.");
+                }
                 game.makeMove(move);
-                dataAccess.removeGame(gameID);
-                data = new GameData(gameID, data.whiteUsername(), data.blackUsername(), data.gameName(), game);
-                dataAccess.createGame(data);
                 Map<Integer, String> vtranslation = Map.of(
                         1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
                 );
@@ -125,15 +125,22 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     message += " CHECK!";
                 }
                 if (game.isInCheckmate(afterMove)) {
-                    message = "CHECKMATE! " + playerTurn + "HAS WON";
+                    message += "\nCHECKMATE! " + playerTurn + "HAS WON";
                 }
                 if (game.isInStalemate(afterMove)) {
-                    message = "Stalemate. GAME DRAW";
+                    message += "\nStalemate. GAME DRAW";
                 }
+                data = new GameData(gameID, data.whiteUsername(), data.blackUsername(), data.gameName(), game);
+                dataAccess.removeGame(gameID);
+                dataAccess.createGame(data);
                 msg.setMessage(message);
+                msg.setGame(game);
                 connections.broadcast(gameID, msg);
             } catch (InvalidMoveException e) {
-                throw new RuntimeException(e);
+                msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message = "Move can not be made. " + e.getMessage();
+                msg.setErrorMessage(message);
+                session.getRemote().sendString(gson.toJson(msg));
             }
 
         }
@@ -169,7 +176,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         session.getRemote().sendString(gson.toJson(msg));
     }
     private void resign(String authToken, Integer gameID, Session session) throws IOException {
-        var message = "";
+
         ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         connections.broadcast(gameID, notification);
         connections.remove(session, gameID);
