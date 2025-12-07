@@ -79,7 +79,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         else {
             message += "an observer";
         }
-
         msg.setGame(game);
         msg.setMessage(message);
 
@@ -149,13 +148,22 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void leave(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
         ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        if (dataAccess.checkAuthToken(authToken) == null) {
+        String playerName = dataAccess.checkAuthToken(authToken);
+        if (playerName == null) {
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             msg.setErrorMessage("Unauthorized");
             session.getRemote().sendString(gson.toJson(msg));
             throw  new DataAccessException("Unauthorized Disconnect");
         }
-        String message = dataAccess.checkAuthToken(authToken) + "left the game.";
+        GameData data = dataAccess.getGame(gameID);
+        if (Objects.equals(dataAccess.getGame(gameID).whiteUsername(), playerName)) {
+            dataAccess.removeGame(gameID);
+            dataAccess.createGame(new GameData(gameID, null, data.blackUsername(), data.gameName(), data.game()));
+        } else if (Objects.equals(dataAccess.getGame(gameID).whiteUsername(), playerName)) {
+            dataAccess.removeGame(gameID);
+            dataAccess.createGame(new GameData(gameID, data.blackUsername(), null, data.gameName(), data.game()));
+        }
+        String message = playerName + " left the game.";
         msg.setMessage(message);
         connections.remove(session, gameID);
         connections.broadcast(gameID, msg);
