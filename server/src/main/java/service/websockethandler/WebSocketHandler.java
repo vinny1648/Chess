@@ -64,10 +64,15 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             msg.setErrorMessage("Unauthorized Connection");
             session.getRemote().sendString(gson.toJson(msg));
-            throw  new DataAccessException("Unauthorized Connection");
+            throw new DataAccessException("Unauthorized Connection");
         }
-        connections.add(session, gameID);
         GameData data = dataAccess.getGame(gameID);
+        if (data == null) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            msg.setErrorMessage("No Existing Game");
+            session.getRemote().sendString(gson.toJson(msg));
+            throw new DataAccessException("No Existing Game");
+        }
         ChessGame game = data.game();
         String message = playerName + " connected to " + data.gameName() + " as ";
         if (playerName.equals(data.whiteUsername())) {
@@ -80,9 +85,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             message += "an observer";
         }
         msg.setGame(game);
+        session.getRemote().sendString(gson.toJson(msg));
+        msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         msg.setMessage(message);
 
         connections.broadcast(gameID, msg);
+        connections.add(session, gameID);
     }
     private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException, DataAccessException {
         ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
