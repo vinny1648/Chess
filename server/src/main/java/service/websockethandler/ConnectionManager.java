@@ -31,11 +31,11 @@ public class ConnectionManager {
         return !connections.containsKey(gameID);
     }
 
-    public void broadcast(Integer gameID, ServerMessage notification) throws IOException {
+    public void broadcast(Session exclude, Integer gameID, ServerMessage notification) throws IOException {
         String msg = gson.toJson(notification);
         if (connections.containsKey(gameID)) {
             for (Session c : connections.get(gameID)) {
-                if (c.isOpen()) {
+                if (c.isOpen() && c != exclude) {
                     c.getRemote().sendString(msg);
                 }
             }

@@ -89,7 +89,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         msg.setMessage(message);
 
-        connections.broadcast(gameID, msg);
+        connections.broadcast(session, gameID, msg);
         connections.add(session, gameID);
     }
     private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException, DataAccessException {
@@ -141,9 +141,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 data = new GameData(gameID, data.whiteUsername(), data.blackUsername(), data.gameName(), game);
                 dataAccess.removeGame(gameID);
                 dataAccess.createGame(data);
-                msg.setMessage(message);
                 msg.setGame(game);
-                connections.broadcast(gameID, msg);
+                connections.broadcast(null, gameID, msg);
+                msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                msg.setMessage(message);
+                connections.broadcast(session, gameID, msg);
             } catch (InvalidMoveException e) {
                 msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message = "Move can not be made. " + e.getMessage();
@@ -177,7 +179,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         if (connections.gameEmpty(gameID) && data.game().gameIsOver()) {
             dataAccess.removeGame(gameID);
         } else {
-            connections.broadcast(gameID, msg);
+            connections.broadcast(null, gameID, msg);
         }
         message = "left game.";
         msg.setMessage(message);
@@ -198,12 +200,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             message = playerName + " resigned. " + data.blackUsername() + " HAS WON!";
             msg.setMessage(message);
             resignGameUpdate(gameID, data);
-            connections.broadcast(gameID, msg);
+            connections.broadcast(null, gameID, msg);
         } else if (Objects.equals(dataAccess.getGame(gameID).blackUsername(), playerName)) {
             message = playerName + " resigned. " + data.whiteUsername() + " HAS WON!";
             msg.setMessage(message);
             resignGameUpdate(gameID, data);
-            connections.broadcast(gameID, msg);
+            connections.broadcast(null, gameID, msg);
         } else {
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             message = "observers can't resign";
