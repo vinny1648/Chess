@@ -27,6 +27,10 @@ public class ConnectionManager {
         }
     }
 
+    public ArrayList<Session> gameSessions(Integer gameID) {
+        return connections.get(gameID);
+    }
+
     public void broadcast(Integer gameID, ServerMessage notification) throws IOException {
         String msg = gson.toJson(notification);
         for (Session c : connections.get(gameID)) {
