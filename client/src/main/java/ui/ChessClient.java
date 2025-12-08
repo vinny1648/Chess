@@ -25,13 +25,30 @@ public class ChessClient implements NotificationHandler {
 
     @Override
     public void notify(ServerMessage notification) {
+        System.out.print("\r" + ERASE_LINE);
+
+        if (notification.getServerMessageType() == ServerMessage.ServerMessageType.LOAD_GAME) {
+            currentGame = notification.getGame();
+            try {
+                gameView();
+            } catch (ResponseException e) {
+                System.out.println("game view error");
+            }
+        }
+
         if (notification.getMessage() != null) {
             System.out.println(SET_TEXT_COLOR_WHITE + notification.getMessage());
         }
         if (notification.getErrorMessage() != null) {
             System.out.println(SET_TEXT_COLOR_RED + notification.getErrorMessage());
         }
+        if (username != null) {
+            System.out.print(SET_TEXT_COLOR_MAGENTA + username + ">>> " + RESET_TEXT_COLOR);
+        } else {
+            System.out.print(SET_TEXT_COLOR_MAGENTA + ">>> " + RESET_TEXT_COLOR);
+        }
     }
+
 
     enum PlayerState {
         WHITETEAM,
@@ -60,16 +77,17 @@ public class ChessClient implements NotificationHandler {
         String result = "";
         while (!result.equals("quit")) {
             if (playerState == UNLOGGED) {
-                System.out.print("\n" + ERASE_SCREEN + ">>> " + SET_TEXT_COLOR_MAGENTA);
-            }
-            else {
-                System.out.print("\n" + ERASE_SCREEN + username + ">>> " + SET_TEXT_COLOR_MAGENTA);
+                System.out.print("\n" + SET_TEXT_COLOR_MAGENTA + ">>> " + RESET_TEXT_COLOR);
+            } else {
+                System.out.print("\n" + SET_TEXT_COLOR_MAGENTA + username + ">>> " + RESET_TEXT_COLOR);
             }
             String line = scanner.nextLine();
 
             try {
                 result = evalInput(line);
-                System.out.print(SET_TEXT_COLOR_MAGENTA + result);
+                if (!Objects.equals(result, "")) {
+                    System.out.print(SET_TEXT_COLOR_MAGENTA + result);
+                }
             } catch (Throwable e) {
                 String msg = e.getMessage();
                 System.out.print(msg);
@@ -123,6 +141,7 @@ public class ChessClient implements NotificationHandler {
         if (params.length > 1) {
             throw new ResponseException("Expected: <position of piece>");
         }
+        System.out.println(ERASE_LINE);
         ArrayList<String> highlightPositions = new ArrayList<>();
         String piecePosition = "";
         if (params.length == 1 && params[0] != null) {
@@ -270,7 +289,12 @@ public class ChessClient implements NotificationHandler {
         return "";
     }
     private String concedeGame() throws ResponseException {
-        ws.concede(auth, currentGameID);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Are you sure? <Y/N>");
+        String line = scanner.nextLine();
+        if (line.toLowerCase().equals("y")) {
+            ws.concede(auth, currentGameID);
+        }
         return "";
 
     }
@@ -348,8 +372,10 @@ public class ChessClient implements NotificationHandler {
     private String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
             try {
+                listGames();
                 currentGameID = glist.get(Integer.parseInt(params[0]));
                 currentGame = server.joinGame(new JoinRequest(null, currentGameID)).game();
+                ws.joinGame(auth, currentGameID);
                 playerState = OBSERVER;
                 gameView();
                 return "Observing Game";
