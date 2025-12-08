@@ -25,9 +25,12 @@ public class ChessClient implements NotificationHandler {
 
     @Override
     public void notify(ServerMessage notification) {
-        System.out.println(SET_TEXT_COLOR_GREEN + notification.getMessage());
-        System.out.println(SET_TEXT_COLOR_RED + notification.getErrorMessage());
-        System.out.print("\n" + ERASE_SCREEN + ">>> " + SET_TEXT_COLOR_MAGENTA);
+        if (notification.getMessage() != null) {
+            System.out.println(SET_TEXT_COLOR_WHITE + notification.getMessage());
+        }
+        if (notification.getErrorMessage() != null) {
+            System.out.println(SET_TEXT_COLOR_RED + notification.getErrorMessage());
+        }
     }
 
     enum PlayerState {
@@ -121,8 +124,9 @@ public class ChessClient implements NotificationHandler {
             throw new ResponseException("Expected: <position of piece>");
         }
         ArrayList<String> highlightPositions = new ArrayList<>();
-        if (params.length == 1) {
+        if (params.length == 1 && params[0] != null) {
             String position = params[0].toLowerCase();
+            System.out.println(position);
             Map<Character, Integer> vtranslation = Map.of(
                     'a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7, 'h', 8
             );
@@ -156,7 +160,7 @@ public class ChessClient implements NotificationHandler {
                 } else {
                     ChessPosition pos = new ChessPosition(row, col);
                     String piece = buildPiece(board.getPiece(pos));
-                    String pot = "" + i + j;
+                    String pot = "" + row + col;
                     if (i % 2 != j % 2 && highlightPositions.contains(pot)) {
                         boardView += SET_BG_COLOR_YELLOW;
                     }
@@ -164,7 +168,7 @@ public class ChessClient implements NotificationHandler {
                         boardView += SET_BG_COLOR_WHITE;
                     }
                     else if (highlightPositions.contains(pot)) {
-                        boardView += "[48;5;184m";
+                        boardView += "\u001b[48;5;184m";
                     }
                     else {
                         boardView += SET_BG_COLOR_BLACK;
@@ -174,7 +178,7 @@ public class ChessClient implements NotificationHandler {
             }
             boardView += "\n";
         }
-        boardView += getEdges();
+        boardView += getEdges() + SET_TEXT_COLOR_MAGENTA + SET_BG_COLOR_BLACK;
         System.out.print(boardView);
         return "";
     }
@@ -261,9 +265,9 @@ public class ChessClient implements NotificationHandler {
     private String joinGame(String... params) throws ResponseException {
         if (params.length >= 2) {
             try {
-                currentGameID = Integer.parseInt(params[0]);
+                currentGameID = glist.get(Integer.parseInt(params[0]));
                 String color = params[1].toUpperCase();
-                GameData gameData = server.joinGame(new JoinRequest(color, glist.get(currentGameID)));
+                GameData gameData = server.joinGame(new JoinRequest(color, currentGameID));
                 ws.joinGame(auth, currentGameID);
                 if (gameData == null) {
                     throw new ResponseException("unable to join game");
@@ -290,8 +294,8 @@ public class ChessClient implements NotificationHandler {
     private String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
             try {
-                currentGameID = Integer.parseInt(params[0]);
-                currentGame = server.joinGame(new JoinRequest(null, glist.get(currentGameID))).game();
+                currentGameID = glist.get(Integer.parseInt(params[0]));
+                currentGame = server.joinGame(new JoinRequest(null, currentGameID)).game();
                 playerState = OBSERVER;
                 gameView();
                 return "Observing Game";
@@ -349,7 +353,7 @@ public class ChessClient implements NotificationHandler {
                 - quit
                 """;
         } else {
-            gameView("null");
+            gameView();
             return """
                 - board
                 - move <from> <to>
