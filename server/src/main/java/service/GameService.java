@@ -50,9 +50,6 @@ public class GameService {
         if (game == null) {
             throw new BadRequestException("No game with requested ID");
         }
-        if (joinRequest.playerColor() == null) {
-            adjustedGame = game;
-        }
         if (Objects.equals(joinRequest.playerColor(), "WHITE")) {
             if (game.whiteUsername() != null) {
                 throw new AlreadyTakenException("Color already taken");
@@ -65,9 +62,7 @@ public class GameService {
             }
             adjustedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
         }
-        else if (Objects.equals(joinRequest.playerColor(), null)) {
-            adjustedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
-        }
+
         else {
             throw new BadRequestException("No exsisting team color");
         }
