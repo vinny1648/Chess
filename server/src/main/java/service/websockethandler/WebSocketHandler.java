@@ -179,11 +179,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         if (connections.gameEmpty(gameID) && data.game().gameIsOver()) {
             dataAccess.removeGame(gameID);
         } else {
-            connections.broadcast(null, gameID, msg);
+            connections.broadcast(session, gameID, msg);
         }
-        message = "left game.";
-        msg.setMessage(message);
-        session.getRemote().sendString(gson.toJson(msg));
+
     }
     private void resign(String authToken, Integer gameID, Session session) throws IOException, DataAccessException {
         ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
@@ -196,7 +194,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
         GameData data = dataAccess.getGame(gameID);
         String message;
-        if (Objects.equals(data.whiteUsername(), playerName)) {
+        if (data.game().gameIsOver()) {
+            msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            message = "Game already over";
+            msg.setErrorMessage(message);
+            session.getRemote().sendString(gson.toJson(msg));
+        } else if (Objects.equals(data.whiteUsername(), playerName)) {
             message = playerName + " resigned. " + data.blackUsername() + " HAS WON!";
             msg.setMessage(message);
             resignGameUpdate(gameID, data);
