@@ -3,7 +3,7 @@ package ui;
 import chess.*;
 import exception.ResponseException;
 import model.*;
-import Facades.*;
+import facades.*;
 import websocket.messages.ServerMessage;
 
 import static ui.ChessClient.PlayerState.*;

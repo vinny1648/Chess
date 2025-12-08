@@ -1,6 +1,5 @@
-package Facades;
+package facades;
 
-import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
 public interface NotificationHandler {

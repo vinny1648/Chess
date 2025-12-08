@@ -152,7 +152,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 connections.broadcast(null, gameID, msg);
                 msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 msg.setMessage(message);
-                connections.broadcast(null, gameID, msg);
+                connections.broadcast(session, gameID, msg);
             } catch (InvalidMoveException e) {
                 msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message = "Move can not be made. " + e.getMessage();

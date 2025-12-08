@@ -1,4 +1,4 @@
-package Facades;
+package facades;
 
 import chess.ChessMove;
 import com.google.gson.Gson;
