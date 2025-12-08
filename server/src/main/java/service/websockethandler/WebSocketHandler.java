@@ -108,19 +108,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         if (game.getTeamTurn() == ChessGame.TeamColor.WHITE) {
             playerTurn = data.whiteUsername();
             afterMove = ChessGame.TeamColor.BLACK;
-            vtranslation = Map.of(
-                    1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
-            );
         }
         else {
             playerTurn = data.blackUsername();
             afterMove = ChessGame.TeamColor.WHITE;
-            vtranslation = Map.of(
-                    1, "h", 2, "g", 3, "f", 4, "e", 5, "d", 6, "c", 7, "b", 8, "a"
-            );
         }
         String message;
-        if (!Objects.equals(playerTurn, dataAccess.checkAuthToken(authToken))) {
+        if (!Objects.equals(playerTurn, dataAccess.checkAuthToken(authToken)) && !game.gameIsOver()) {
             message = "It is not your turn";
             msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             msg.setErrorMessage(message);
@@ -131,8 +125,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     throw new InvalidMoveException("Game is Over.");
                 }
                 game.makeMove(move);
-                message = playerTurn + " moved " + vtranslation.get(move.getStartPosition().getRow()) + move.getStartPosition().getColumn() +
-                        " to " + vtranslation.get(move.getEndPosition().getRow()) + move.getEndPosition().getColumn();
+                vtranslation = Map.of(
+                        1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
+                );
+                message = playerTurn + " moved " + vtranslation.get(move.getStartPosition().getColumn()) + move.getStartPosition().getRow() +
+                        " to " + vtranslation.get(move.getEndPosition().getColumn()) + move.getEndPosition().getRow();
                 if (game.isInCheckmate(afterMove)) {
                     message += "\nCHECKMATE! " + playerTurn + " HAS WON!";
                 }
@@ -155,7 +152,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 connections.broadcast(null, gameID, msg);
                 msg = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 msg.setMessage(message);
-                connections.broadcast(session, gameID, msg);
+                connections.broadcast(null, gameID, msg);
             } catch (InvalidMoveException e) {
                 msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message = "Move can not be made. " + e.getMessage();
