@@ -129,11 +129,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 );
                 message = playerTurn + " moved " + vtranslation.get(move.getStartPosition().getRow()) + move.getStartPosition().getColumn() +
                         " to " + vtranslation.get(move.getEndPosition().getRow()) + move.getEndPosition().getColumn();
-                if (game.isInCheck(afterMove)) {
-                    message += " CHECK!";
-                }
                 if (game.isInCheckmate(afterMove)) {
                     message += "\nCHECKMATE! " + playerTurn + " HAS WON!";
+                }
+                else if (game.isInCheck(afterMove)) {
+                    String check;
+                    if (Objects.equals(playerTurn, data.whiteUsername())) {
+                        check = data.blackUsername();
+                    } else {
+                        check = data.whiteUsername();
+                    }
+                    message += "\n" + check + " is in CHECK!";
                 }
                 if (game.isInStalemate(afterMove)) {
                     message += "\nStalemate. GAME DRAW";
