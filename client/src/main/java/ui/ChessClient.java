@@ -124,9 +124,9 @@ public class ChessClient implements NotificationHandler {
             throw new ResponseException("Expected: <position of piece>");
         }
         ArrayList<String> highlightPositions = new ArrayList<>();
+        String piecePosition = "";
         if (params.length == 1 && params[0] != null) {
             String position = params[0].toLowerCase();
-            System.out.println(position);
             Map<Character, Integer> vtranslation = Map.of(
                     'a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7, 'h', 8
             );
@@ -136,6 +136,7 @@ public class ChessClient implements NotificationHandler {
                 throw new ResponseException("Position must be expressed by a letter (a-h) and a number (1-8)");
             }
             int colPosition = vtranslation.get(colPositionLetter);
+            piecePosition = "" + rowPosition + colPosition;
             ChessPosition chessPosition = new ChessPosition(rowPosition, colPosition);
             Collection<ChessMove> vMoves = currentGame.validMoves(chessPosition);
             String hPosition;
@@ -161,16 +162,15 @@ public class ChessClient implements NotificationHandler {
                     ChessPosition pos = new ChessPosition(row, col);
                     String piece = buildPiece(board.getPiece(pos));
                     String pot = "" + row + col;
-                    if (i % 2 != j % 2 && highlightPositions.contains(pot)) {
+                    if (pot.equals(piecePosition)) {
+                        boardView += SET_BG_COLOR_DARK_GREEN;
+                    } else if (i % 2 != j % 2 && highlightPositions.contains(pot)) {
                         boardView += SET_BG_COLOR_YELLOW;
-                    }
-                    else if (i % 2 != j % 2) {
+                    } else if (i % 2 != j % 2) {
                         boardView += SET_BG_COLOR_WHITE;
-                    }
-                    else if (highlightPositions.contains(pot)) {
+                    } else if (highlightPositions.contains(pot)) {
                         boardView += "\u001b[48;5;184m";
-                    }
-                    else {
+                    } else {
                         boardView += SET_BG_COLOR_BLACK;
                     }
                     boardView += piece;
@@ -213,12 +213,66 @@ public class ChessClient implements NotificationHandler {
         };
         return color + type;
     }
-    private String move(String... params) {
-        return "moves not implemented";
+    private String move(String... params) throws ResponseException {
+        if (params.length < 2 || params.length > 3) {
+            throw new ResponseException(
+                    "Expected: <position of piece> <position to move to> (<piece to promote to if applicable>)");
+        }
+
+        ChessPosition startPosition;
+        ChessPosition endPosition;
+        ChessPiece.PieceType promo = null;
+
+        if (params.length == 3 && params[2] != null) {
+            String promoStr = params[2].toUpperCase();
+            promo = switch (promoStr) {
+                case "QUEEN" -> ChessPiece.PieceType.QUEEN;
+                case "BISHOP" -> ChessPiece.PieceType.BISHOP;
+                case "KNIGHT" -> ChessPiece.PieceType.KNIGHT;
+                case "ROOK" -> ChessPiece.PieceType.ROOK;
+                default -> throw new ResponseException(
+                        "Promotion piece must be one of: QUEEN, BISHOP, KNIGHT, ROOK");
+            };
+        }
+
+        String start = params[0].toLowerCase();
+        String end = params[1].toLowerCase();
+
+        Map<Character, Integer> vtranslation = Map.of(
+                'a', 1, 'b', 2, 'c', 3, 'd', 4,
+                'e', 5, 'f', 6, 'g', 7, 'h', 8
+        );
+
+        if (start.length() != 2) {
+            throw new ResponseException("Position must be expressed by a letter (a-h) and a number (1-8)");
+        }
+        char startColPositionLetter = start.charAt(0);
+        int startRowPosition = Character.getNumericValue(start.charAt(1));
+
+        if (end.length() != 2) {
+            throw new ResponseException("Position must be expressed by a letter (a-h) and a number (1-8)");
+        }
+        char endColPositionLetter = end.charAt(0);
+        int endRowPosition = Character.getNumericValue(end.charAt(1));
+
+        if (!vtranslation.containsKey(startColPositionLetter) || startRowPosition < 1 || startRowPosition > 8 ||
+                !vtranslation.containsKey(endColPositionLetter)   || endRowPosition   < 1 || endRowPosition   > 8) {
+            throw new ResponseException("Position must be expressed by a letter (a-h) and a number (1-8)");
+        }
+
+        int startColPosition = vtranslation.get(startColPositionLetter);
+        int endColPosition = vtranslation.get(endColPositionLetter);
+
+        startPosition = new ChessPosition(startRowPosition, startColPosition);
+        endPosition   = new ChessPosition(endRowPosition, endColPosition);
+
+        ws.makeMove(auth, currentGameID, new ChessMove(startPosition, endPosition, promo));
+        return "";
     }
-    private String concedeGame() {
-        playerState = MENU;
-        return "Game Conceded";
+    private String concedeGame() throws ResponseException {
+        ws.concede(auth, currentGameID);
+        return "";
+
     }
     private String leaveGame() {
         try {
