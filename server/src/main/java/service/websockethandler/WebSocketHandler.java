@@ -104,13 +104,20 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         ChessGame game = data.game();
         String playerTurn;
         ChessGame.TeamColor afterMove;
+        Map<Integer, String> vtranslation;
         if (game.getTeamTurn() == ChessGame.TeamColor.WHITE) {
             playerTurn = data.whiteUsername();
             afterMove = ChessGame.TeamColor.BLACK;
+            vtranslation = Map.of(
+                    1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
+            );
         }
         else {
             playerTurn = data.blackUsername();
             afterMove = ChessGame.TeamColor.WHITE;
+            vtranslation = Map.of(
+                    1, "h", 2, "g", 3, "f", 4, "e", 5, "d", 6, "c", 7, "b", 8, "a"
+            );
         }
         String message;
         if (!Objects.equals(playerTurn, dataAccess.checkAuthToken(authToken))) {
@@ -124,9 +131,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     throw new InvalidMoveException("Game is Over.");
                 }
                 game.makeMove(move);
-                Map<Integer, String> vtranslation = Map.of(
-                        1, "a", 2, "b", 3, "c", 4, "d", 5, "e", 6, "f", 7, "g", 8, "h"
-                );
                 message = playerTurn + " moved " + vtranslation.get(move.getStartPosition().getRow()) + move.getStartPosition().getColumn() +
                         " to " + vtranslation.get(move.getEndPosition().getRow()) + move.getEndPosition().getColumn();
                 if (game.isInCheckmate(afterMove)) {
