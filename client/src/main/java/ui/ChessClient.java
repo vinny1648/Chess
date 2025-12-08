@@ -374,7 +374,7 @@ public class ChessClient implements NotificationHandler {
             try {
                 listGames();
                 currentGameID = glist.get(Integer.parseInt(params[0]));
-                currentGame = server.joinGame(new JoinRequest(null, currentGameID)).game();
+                currentGame = new ChessGame();
                 ws.joinGame(auth, currentGameID);
                 playerState = OBSERVER;
                 gameView();
