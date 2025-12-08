@@ -9,10 +9,7 @@ import websocket.messages.ServerMessage;
 import static ui.ChessClient.PlayerState.*;
 import static ui.EscapeSequences.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class ChessClient implements NotificationHandler {
 
@@ -28,7 +25,8 @@ public class ChessClient implements NotificationHandler {
 
     @Override
     public void notify(ServerMessage notification) {
-        System.out.println(SET_TEXT_COLOR_RED + notification.getMessage());
+        System.out.println(SET_TEXT_COLOR_GREEN + notification.getMessage());
+        System.out.println(SET_TEXT_COLOR_RED + notification.getErrorMessage());
         System.out.print("\n" + ERASE_SCREEN + ">>> " + SET_TEXT_COLOR_MAGENTA);
     }
 
@@ -122,8 +120,25 @@ public class ChessClient implements NotificationHandler {
         if (params.length > 1) {
             throw new ResponseException("Expected: <position of piece>");
         }
-        if (!Objects.equals(params[0], "null")) {
-            String pass = "pass";
+        ArrayList<String> highlightPositions = new ArrayList<>();
+        if (params.length == 1) {
+            String position = params[0].toLowerCase();
+            Map<Character, Integer> vtranslation = Map.of(
+                    'a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7, 'h', 8
+            );
+            char colPositionLetter = position.charAt(0);
+            int rowPosition = Character.getNumericValue(position.charAt(1));
+            if (position.length() != 2 || !vtranslation.containsKey(colPositionLetter) || rowPosition < 1 || rowPosition > 8) {
+                throw new ResponseException("Position must be expressed by a letter (a-h) and a number (1-8)");
+            }
+            int colPosition = vtranslation.get(colPositionLetter);
+            ChessPosition chessPosition = new ChessPosition(rowPosition, colPosition);
+            Collection<ChessMove> vMoves = currentGame.validMoves(chessPosition);
+            String hPosition;
+            for (ChessMove move: vMoves) {
+                hPosition = "" + move.getEndPosition().getRow() + move.getEndPosition().getColumn();
+                highlightPositions.add(hPosition);
+            }
         }
         String boardView = getEdges();
         ChessBoard board = currentGame.getBoard();
@@ -141,8 +156,15 @@ public class ChessClient implements NotificationHandler {
                 } else {
                     ChessPosition pos = new ChessPosition(row, col);
                     String piece = buildPiece(board.getPiece(pos));
-                    if (i % 2 != j % 2) {
+                    String pot = "" + i + j;
+                    if (i % 2 != j % 2 && highlightPositions.contains(pot)) {
+                        boardView += SET_BG_COLOR_YELLOW;
+                    }
+                    else if (i % 2 != j % 2) {
                         boardView += SET_BG_COLOR_WHITE;
+                    }
+                    else if (highlightPositions.contains(pot)) {
+                        boardView += "[48;5;184m";
                     }
                     else {
                         boardView += SET_BG_COLOR_BLACK;
