@@ -206,12 +206,20 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             msg.setErrorMessage(message);
             session.getRemote().sendString(gson.toJson(msg));
         } else if (Objects.equals(data.whiteUsername(), playerName)) {
-            message = playerName + " resigned. " + data.blackUsername() + " HAS WON!";
+            String otherUser = data.blackUsername();
+            if (otherUser == null) {
+                otherUser = "nobody";
+            }
+            message = playerName + " resigned. " + otherUser + " HAS WON!";
             msg.setMessage(message);
             resignGameUpdate(gameID, data);
             connections.broadcast(null, gameID, msg);
         } else if (Objects.equals(dataAccess.getGame(gameID).blackUsername(), playerName)) {
-            message = playerName + " resigned. " + data.whiteUsername() + " HAS WON!";
+            String otherUser = data.whiteUsername();
+            if (otherUser == null) {
+                otherUser = "nobody";
+            }
+            message = playerName + " resigned. " + otherUser + " HAS WON!";
             msg.setMessage(message);
             resignGameUpdate(gameID, data);
             connections.broadcast(null, gameID, msg);

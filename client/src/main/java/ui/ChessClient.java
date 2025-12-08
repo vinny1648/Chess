@@ -157,6 +157,9 @@ public class ChessClient implements NotificationHandler {
             int colPosition = vtranslation.get(colPositionLetter);
             piecePosition = "" + rowPosition + colPosition;
             ChessPosition chessPosition = new ChessPosition(rowPosition, colPosition);
+            if (currentGame.getBoard().getPiece(chessPosition) == null) {
+                throw new ResponseException("no piece at position " + position);
+            }
             Collection<ChessMove> vMoves = currentGame.validMoves(chessPosition);
             String hPosition;
             for (ChessMove move: vMoves) {
@@ -436,7 +439,7 @@ public class ChessClient implements NotificationHandler {
             gameView();
             return """
                 - board
-                - move <from> <to>
+                - move <from> <to> (<promotion piece if applicable>)
                 - vaildmoves <position of piece>
                 - leave
                 - concede
